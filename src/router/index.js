@@ -5,6 +5,7 @@ import HelpView from '../views/HelpView.vue'
 import CalendarView from '../views/CalendarView.vue'
 
 import PositionView from '../views/PositionView.vue'
+import MeetingView from '../views/MeetingView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,6 +19,11 @@ const router = createRouter({
       path: '/help',
       name: 'help',
       component: HelpView
+    },
+    {
+      path: '/meeting',
+      name: 'meeting',
+      component: MeetingView
     },
     {
       path: '/about',

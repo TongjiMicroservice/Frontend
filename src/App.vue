@@ -80,9 +80,11 @@
             <span>日程规划</span>
               </RouterLink >
           </el-menu-item>
-          <el-menu-item index="3" disabled>
+          <el-menu-item index="3">
+            <RouterLink to="/meeting">
             <el-icon><document /></el-icon>
             <span>会议管理</span>
+          </RouterLink>
           </el-menu-item>
           <el-menu-item index="4">
             <RouterLink to="/position">

@@ -60,6 +60,8 @@
 <script>
 import { defineComponent, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
+import axios from 'axios'
+
 export default defineComponent({
   name: "ContactList",
   setup() {

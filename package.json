@@ -8,20 +8,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
     "axios": "^1.6.2",
     "element-plus": "^2.3.14",
-    "element-ui": "^2.15.14",
-    "mockjs": "^1.1.0",
-    "papaparse": "^5.4.1",
-    "pubsub-js": "^1.9.4",
-    "typings": "^2.1.1",
-    "vite-plugin-csv": "^1.0.0",
-    "vue": "^3.3.4",
-    "vue-baidu-map": "^0.21.22",
-    "vue-calendar-component": "^2.8.2",
-    "vue-router": "^4.2.4",
-    "vue-unity-webgl": "^1.2.0",
-    "vue2-leaflet": "^2.7.1"
+    "vue": "^3.3.10",
+    "vue-router": "^4.2.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.3.4",

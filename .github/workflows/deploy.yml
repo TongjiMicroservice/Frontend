@@ -27,7 +27,7 @@ jobs:
             run: pnpm install --no-frozen-lockfile
 
         -   name: build
-            run: pnpm run build-only
+            run: pnpm build
 
         -   name: deploy
             uses: appleboy/scp-action@v0.1.4

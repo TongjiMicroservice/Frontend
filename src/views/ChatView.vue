@@ -1,53 +1,16 @@
-<script setup>
-
+<script setup lang="ts">
+import ChatList from '@/components/Chat/ChatList.vue'
 </script>
 
-
-  <template>
-    <Modal title="在线沟通" v-model="chatVisible"
-           draggable
-           footer-hide
-           :width="580" @on-cancel="cancel">
-      <div class="chat">
-        <div  class="chat-message-body" id ="chatform" @scroll="scroll"
-        >
-          <Spin v-if="loading">
-            <Icon type="ios-loading" size=18 class="spin-icon-load"></Icon>
-          </Spin>
-          <div  dis-hover v-for="(item,index) in data"
-                :key="index" class="message-card">
-            <div :class="item.isOneself == 1?'message-row-right': 'message-row-left'">
-              <img :src="item.avatar?item.avatar:defualtAvatar"
-                   height="35" width="35" >
-              <div class="message-content">
-                <div :style="item.isOneself == 1?'text-align:right;display: flex;flex-direction:row-reverse':''">
-                  {{item.nickName}}
-                  <span class="message-time">
-                   {{item.createTime}}</span>
-                </div>
-                <div class="message-body">
-                  {{item.content.msg}}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <Input
-            v-model="form.msg"
-            type="textarea"
-            style="margin:10px 0;"
-            placeholder="主动一点，世界会更大！"
-            :rows="4"
-        />
-      </div>
-      <div class="footer-btn">
-        <Button @click="cancel" type="text">取消</Button>
-        <Button type="primary" @click="sendMsg">发送</Button>
-      </div>
-    </Modal>
-
+<template>
+  <el-row class="w-full h-full">
+    <el-col :span="6">
+      <ChatList />
+    </el-col>
+    <el-col :span="18">
+    </el-col>
+  </el-row>
 </template>
 
 <style scoped>
-
 </style>

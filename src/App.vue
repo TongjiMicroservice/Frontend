@@ -1,5 +1,13 @@
+<script setup lang="ts">
+import {RouterView } from 'vue-router'
+</script>
+
 <template>
-  <div id="app">
-    <router-view></router-view>
+  <div class="h-screen w-screen">
+    <RouterView class="h-full w-full"/>
   </div>
 </template>
+
+<style scoped>
+
+</style>

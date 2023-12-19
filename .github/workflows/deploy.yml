@@ -36,5 +36,5 @@ jobs:
                 username: root
                 key: ${{secrets.PK}}
                 source: "./dist/*"
-                target: "/root/TeamSphere/Frontend/wwwroot"
+                target: "/var/www/teamsphere-frontend"
                 overwrite: true

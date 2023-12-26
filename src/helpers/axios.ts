@@ -5,7 +5,25 @@ import axios from 'axios'
 if (import.meta.env.MODE === 'development') axios.defaults.baseURL = 'http://localhost:8090/'
 else axios.defaults.baseURL = 'http://localhost:8090/'
 
-axios.defaults.withCredentials = true;
+axios.defaults.withCredentials = false
+
+axios.interceptors.request.use(
+  function (config) {
+    // 在发送请求之前做些什么
+    if (window.localStorage.getItem('token')) {
+      config.headers['satoken'] = window.localStorage.getItem('token')
+    }
+    return config
+  },
+  function (error) {
+    // 对请求错误做些什么
+    ElMessage({
+      message: '连接失败，请检查网络连接或询管理员',
+      type: 'warning'
+    })
+    return Promise.reject(error)
+  }
+)
 
 
 axios.interceptors.response.use(

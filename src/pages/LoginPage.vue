@@ -24,6 +24,8 @@ const login=(username:string,password:string)=>{
         message: '登录成功',
         type: 'success'
       })
+      let tokenvalue=res.data.data.tokenValue
+      window.localStorage.setItem('token',tokenvalue)
       router.push('/home')
     }else{
       console.log('fail')

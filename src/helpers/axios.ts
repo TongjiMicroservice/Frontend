@@ -5,6 +5,8 @@ import axios from 'axios'
 if (import.meta.env.MODE === 'development') axios.defaults.baseURL = 'http://localhost:8090/'
 else axios.defaults.baseURL = 'http://localhost:8090/'
 
+axios.defaults.withCredentials = true;
+
 
 axios.interceptors.response.use(
   function (response) {

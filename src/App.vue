@@ -22,13 +22,15 @@ onMounted(async ()=>{
       currentUser.email=res.data.email
       currentUser.name=res.data.username
       store.commit('login',currentUser)
+      router.push('/home')
     }else{
       if(res.data.code===401){
         ElMessage({
-        message: '请先登录',
-        type: 'warning'
-      })
-      router.push('/login')
+          message: '请先登录',
+          type: 'warning'
+        })
+        console.log('fail')
+        router.push('/login')
       }
     }
   })

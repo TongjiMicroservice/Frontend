@@ -10,7 +10,7 @@ const projectList = ref(['项目1','项目2','项目3'])
     class="top-bar"
     >
     <el-menu-item index="1">
-      <el-image src="/src/assets/logo.jpg" fit="contain" style="height: 50px; width: 50px;"></el-image>
+      <el-image src="/logo.jpg" fit="contain" style="height: 50px; width: 50px;"></el-image>
     </el-menu-item>
     <el-menu-item index="2">
       <h1>TeamSphere</h1>

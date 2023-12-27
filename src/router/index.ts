@@ -6,6 +6,7 @@ import HomeView from '../views/HomeView.vue'
 import PersonView from '../views/PersonView.vue'
 import LoginPage from '@/pages/LoginPage.vue'
 import SearchView from "@/views/SearchView.vue";
+import RegisterPage from '@/pages/RegisterPage.vue'
 import {Search} from "@element-plus/icons-vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,6 +15,11 @@ const router = createRouter({
       path:'/login',
       name:'login',
       component:LoginPage
+    },
+    {
+      path:'/register',
+      name:'register',
+      component: RegisterPage
     },
     {
       path: '/',

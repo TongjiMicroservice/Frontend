@@ -3,7 +3,7 @@ import axios from 'axios'
 // import router from '@/router'
 
 if (import.meta.env.MODE === 'development') axios.defaults.baseURL = 'http://localhost:8090/'
-else axios.defaults.baseURL = 'http://localhost:8090/'
+else axios.defaults.baseURL = 'http://luxingzhi.cn:8090/'
 
 axios.defaults.withCredentials = false
 

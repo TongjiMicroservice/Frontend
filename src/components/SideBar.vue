@@ -10,7 +10,7 @@
       router
     >
       <el-menu-item index="/person">
-        <el-avatar :size="25" src="/src/assets/default_avatar.png"></el-avatar>
+        <el-avatar :size="25" src="/default_avatar.png"></el-avatar>
         <template #title>个人信息</template>
       </el-menu-item>
       <el-menu-item index="/home">

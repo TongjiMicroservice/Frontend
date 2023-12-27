@@ -50,24 +50,4 @@ const login=(username:string,password:string)=>{
       </el-form>
     </div>
   </div>
-    
 </template>
-
-<style scoped>
-
-.box{
-    min-width: 500px;
-    backdrop-filter: blur(11px) saturate(180%) brightness(105%);
-    -webkit-backdrop-filter: blur(11px) saturate(180%);
-    background-color: rgba(255, 255, 255, 0.5);
-    border-radius: 12px;
-    border: 1px solid rgba(209, 213, 219, 0.3);
-    padding: 15px;
-}
-
-.content{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-</style>

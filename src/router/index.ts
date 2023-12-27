@@ -5,7 +5,8 @@ import DocumentsView from '../views/DocumentsView.vue'
 import HomeView from '../views/HomeView.vue'
 import PersonView from '../views/PersonView.vue'
 import LoginPage from '@/pages/LoginPage.vue'
-
+import SearchView from "@/views/SearchView.vue";
+import {Search} from "@element-plus/icons-vue";
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -38,10 +39,15 @@ const router = createRouter({
           path: '/person',
           name: 'person',
           component: PersonView,
+        },
+        {
+          path: '/search',
+          name: 'search',
+          component: SearchView,
         }
       ]
     },
-    
+
   ]
 })
 

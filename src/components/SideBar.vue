@@ -20,10 +20,14 @@
       <el-menu-item index="/chat">
         <el-icon><UserFilled /></el-icon>
         <template #title>联系人</template>
-      </el-menu-item>   
+      </el-menu-item>
       <el-menu-item index="/docs">
         <el-icon><Document /></el-icon>
         <template #title>文档</template>
+      </el-menu-item>
+      <el-menu-item index="/search">
+        <el-icon><Search /></el-icon>
+        <template #title>搜索项目</template>
       </el-menu-item>
     </el-menu>
   </div>

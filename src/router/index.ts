@@ -5,6 +5,8 @@ import DocumentsView from '../views/DocumentsView.vue'
 import HomeView from '../views/HomeView.vue'
 import PersonView from '../views/PersonView.vue'
 import LoginPage from '@/pages/LoginPage.vue'
+import TaskView from '../views/TaskView.vue'
+import MeetingView from '../views/MeetingView.vue'
 import SearchView from "@/views/SearchView.vue";
 import RegisterPage from '@/pages/RegisterPage.vue'
 import CreatePage from "@/pages/CreatePage.vue";
@@ -43,6 +45,16 @@ const router = createRouter({
           component: ChatView,
         },
         {
+          path: '/task',
+          name: 'task',
+          component: TaskView,
+        },
+        {
+          path: '/meeting',
+          name: 'meeting',
+          component: MeetingView,
+        },
+        {
           path: '/docs',
           name: 'docs',
           component: DocumentsView,
@@ -64,7 +76,6 @@ const router = createRouter({
         }
       ]
     },
-
   ]
 })
 

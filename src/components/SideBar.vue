@@ -28,6 +28,10 @@ const store=useStore()
         <el-icon><UserFilled /></el-icon>
         <template #title>联系人</template>
       </el-menu-item>
+      <el-menu-item index="/schedule">
+        <el-icon><Bell /></el-icon>
+        <template #title>日程</template>
+      </el-menu-item>
       <el-menu-item index="/docs">
         <el-icon><Document /></el-icon>
         <template #title>文档</template>
@@ -35,6 +39,10 @@ const store=useStore()
       <el-menu-item index="/meeting">
         <el-icon><Histogram /></el-icon>
         <template #title>会议</template>
+      </el-menu-item>
+      <el-menu-item index="/manage" v-if="store.state.currentUser.role==='admin'||store.state.currentUser.role==='leader'">
+        <el-icon><Tools /></el-icon>
+        <template #title>管理</template>
       </el-menu-item>
     </el-menu>
   </div>

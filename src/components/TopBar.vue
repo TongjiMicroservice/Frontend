@@ -3,7 +3,6 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router';
 import {useStore} from 'vuex'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
 import Project from '@/models/Project'
 const projectList = ref<Project[]>([])
 const currentProject=ref<Project>(new Project(-1,'','',-1,-1))
@@ -38,11 +37,9 @@ const handleSelect = (index:string, indexPath:string) => {
   }
 }
 
-
-
-watch (()=>store.state.projects,()=>{
-  console.log('vuex中的项目列表',store.state.projects)
+watch(()=>store.state.currentProjectId,()=>{
   projectList.value=store.state.projects
+  currentProject.value=store.state.projects.find((project:Project)=>project.id===store.state.currentProjectId)!
 })
 </script>
 
@@ -54,14 +51,14 @@ watch (()=>store.state.projects,()=>{
     @select="handleSelect"
     >
     <el-menu-item index="1">
-      <el-image src="/logo.jpg" fit="contain" style="height: 50px; width: 50px;"></el-image>
+      <el-image src="/logo.png" fit="contain" style="height: 50px; width: 50px;"></el-image>
     </el-menu-item>
     <el-menu-item index="2">
       <h1>TeamSphere</h1>
     </el-menu-item>
     <div style="flex-grow: 6;"/>
     <el-sub-menu index="3" style="flex-grow: 0.1;">
-      <template #title>项目列表</template>
+      <template #title>{{ currentProject.name }}</template>
       <el-menu-item v-for="(project,index) in projectList" :key="index"  :index="`3-${index+1}`">{{ project.name }}</el-menu-item>
     </el-sub-menu>
     <el-menu-item index="5">

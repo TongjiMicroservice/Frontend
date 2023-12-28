@@ -4,7 +4,7 @@ import axios from 'axios'
 import {ElMessage} from 'element-plus'
 import {useRoute,useRouter} from 'vue-router'
 import {useStore} from 'vuex'
-import { onMounted,ref } from 'vue'
+import { onBeforeMount,ref } from 'vue'
 import User from '@/models/User'
 import Project from '@/models/Project'
 
@@ -12,6 +12,7 @@ const store=useStore()
 const router=useRouter()
 
 const projectList=ref<Project[]>([])
+const currentProject=ref<Project>(new Project(-1,'','',-1,-1))
 
 const getProjectList=async ():Promise<boolean>=>{
   return axios({
@@ -80,7 +81,7 @@ const getRole=async (projectId:number)=>{
   })
 }
 
-onMounted(()=>{
+onBeforeMount(()=>{
   let currentUser=new User(-1,'anonymous','','/default_avatar.png')
   axios({
     method:'get',
@@ -100,7 +101,12 @@ onMounted(()=>{
           }else{
             store.commit('setCurrentProjectId',projectList.value[0].id)
           }
+          currentProject.value=projectList.value.find((project)=>project.id===store.state.currentProjectId)!
           getRole(store.state.currentProjectId)
+          ElMessage({
+            message: store.state.currentUser.name+'，进入项目'+currentProject.value.name,
+            type: 'success'
+          })
           router.push('/home')
         }else{
           router.push('/create_project')

@@ -17,10 +17,7 @@ axios.interceptors.request.use(
   },
   function (error) {
     // 对请求错误做些什么
-    ElMessage({
-      message: '连接失败，请检查网络连接或询管理员',
-      type: 'warning'
-    })
+    alert(error.message)
     return Promise.reject(error)
   }
 )

@@ -1,26 +1,32 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router';
-const projectList = ref(['项目1','项目2','项目3'])
+import {useStore} from 'vuex'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+import Project from '@/models/Project'
+const projectList = ref<Project[]>([])
+const currentProject=ref<Project>(new Project(-1,'','',-1,-1))
 
 const router = useRouter()
+const store=useStore()
+
 
 const handleSelect = (index:string, indexPath:string) => {
+  if(index.startsWith('3-')){
+    console.log(index)
+    let id=parseInt(index.split('-')[1])
+    currentProject.value=projectList.value[id-1]
+    window.localStorage.setItem(`${store.state.currentUser.id}_currentProject`,currentProject.value.id.toString())
+    store.commit('setCurrentProjectId',currentProject.value.id)
+    console.log(window.localStorage.getItem(`${store.state.currentUser.id}_currentProject`))
+  }
   switch(index){
     case '1':
       console.log('logo')
       break
     case '2':
       console.log('TeamSphere')
-      break
-    case '3-1':
-      console.log('项目1')
-      break
-    case '3-2':
-      console.log('项目2')
-      break
-    case '3-3':
-      console.log('项目3')
       break
     case '4':
       console.log('帮助')
@@ -31,12 +37,18 @@ const handleSelect = (index:string, indexPath:string) => {
       break
   }
 }
+
+
+onMounted(()=>{
+  projectList.value=store.state.projects
+})
+
 </script>
 
 <template>
   <el-menu
     mode="horizontal"
-    default-active="1"
+    default-active="2"
     class="top-bar"
     @select="handleSelect"
     >
@@ -49,7 +61,7 @@ const handleSelect = (index:string, indexPath:string) => {
     <div style="flex-grow: 6;"/>
     <el-sub-menu index="3" style="flex-grow: 0.1;">
       <template #title>项目列表</template>
-      <el-menu-item v-for="(project,index) in projectList" :key="index"  :index="`3-${index+1}`">{{ project }}</el-menu-item>
+      <el-menu-item v-for="(project,index) in projectList" :key="index"  :index="`3-${index+1}`">{{ project.name }}</el-menu-item>
     </el-sub-menu>
     <el-menu-item index="5">
       <span>登录</span>

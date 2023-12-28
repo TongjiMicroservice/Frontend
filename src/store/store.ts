@@ -1,5 +1,6 @@
 import {createStore} from 'vuex'
 import User from '@/models/User'
+import Project from '@/models/Project'
 
 export default createStore({
     state(){
@@ -7,8 +8,9 @@ export default createStore({
             currentUser:new User(-1,'anonymous','','/default_avatar.png'),
             isLogged:false,
             currentProjectId:-1,
-            projects:[],
-            role:'member'
+            projects:[] as Project[],
+            role:'member',
+            hasProject:false
         }
     },
     mutations:{
@@ -23,11 +25,14 @@ export default createStore({
         setCurrentProjectId(state, projectId:number){
             state.currentProjectId = projectId
         },
-        setProjects(state, projects:[]){
+        setProjects(state, projects:Project[]){
             state.projects = projects
         },
         setRole(state, role:string){
             state.role = role
+        },
+        setHasProject(state, hasProject:boolean){
+            state.hasProject = hasProject
         }
     },
 })

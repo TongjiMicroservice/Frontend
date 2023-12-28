@@ -26,6 +26,7 @@ export default createStore({
             state.currentProjectId = projectId
         },
         setProjects(state, projects:Project[]){
+            console.log('setProjects', projects)
             state.projects = projects
         },
         setRole(state, role:string){

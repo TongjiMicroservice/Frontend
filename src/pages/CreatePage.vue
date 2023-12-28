@@ -2,16 +2,24 @@
 import { useStore } from 'vuex';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 const store=useStore()
+const router=useRouter()
 
 const createProjectVisible=ref(false)
+const searchProjectVisible=ref(false)
 
 const createProjectForm=reactive({
     name:'',
     description:'',
     scale:0,
 })
+
+watch(()=>searchProjectVisible.value,(v)=>{
+    console.log(v)
+})
+
 
 const createProject=(name:string,description:string,scale:number)=>{
     createProjectVisible.value=false
@@ -71,7 +79,7 @@ const createProject=(name:string,description:string,scale:number)=>{
                         </el-button>
                     </template>
                 </el-dialog>
-                <el-button>加入项目</el-button>
+                <el-button @click="router.push('search_project')">加入项目</el-button>
             </div>
         </div>
     </div>

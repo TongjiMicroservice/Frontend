@@ -33,7 +33,8 @@ const store=useStore()
         <template #title>文档</template>
       </el-menu-item>
       <el-menu-item index="/meeting">
-        <el-icon><Document /></el-icon>
+        <el-icon><Histogram /></el-icon>
+        <template #title>会议</template>
       </el-menu-item>
     </el-menu>
   </div>

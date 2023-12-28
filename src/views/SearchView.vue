@@ -1,13 +1,10 @@
 <template>
-  <el-container>
-    <el-header style="background-color: #243b55">
-      <el-input placeholder="请输入搜索内容" v-model="searchQuery">
+  <div class="flex flex-col w-full mx-5">
+    <el-input placeholder="请输入搜索内容" v-model="searchQuery" class="my-5">
         <template #append>
           <el-button icon="Search" type="text"></el-button>
         </template>
-      </el-input>
-    </el-header >
-    <el-main>
+    </el-input>
       <el-row :gutter="20">
         <el-col :span="8" v-for="(task, index) in filteredTasks" :key="index">
           <el-card :body-style="{ padding: '20px' }">
@@ -18,9 +15,9 @@
           </el-card>
         </el-col>
       </el-row>
+  </div>
+      
 
-    </el-main>
-  </el-container>
 
   <el-dialog
       title="任务详情"

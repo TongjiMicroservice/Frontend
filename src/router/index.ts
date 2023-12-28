@@ -8,6 +8,7 @@ import LoginPage from '@/pages/LoginPage.vue'
 import SearchView from "@/views/SearchView.vue";
 import RegisterPage from '@/pages/RegisterPage.vue'
 import CreatePage from "@/pages/CreatePage.vue";
+import SearchProjectPage from '@/pages/SearchProjectPage.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -25,6 +26,11 @@ const router = createRouter({
       path:'/create_project',
       name:'create_project',
       component: CreatePage
+    },
+    {
+      path:'/search_project',
+      name:'search_project',
+      component: SearchProjectPage
     },
     {
       path: '/',

@@ -39,10 +39,11 @@ const handleSelect = (index:string, indexPath:string) => {
 }
 
 
-onMounted(()=>{
+
+watch (()=>store.state.projects,()=>{
+  console.log('vuex中的项目列表',store.state.projects)
   projectList.value=store.state.projects
 })
-
 </script>
 
 <template>

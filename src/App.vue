@@ -22,9 +22,14 @@ const getProjectList=async ():Promise<boolean>=>{
     }
   }).then((r)=>{
     if(r.status===200&&r.data.code===200){
-      projectList.value=r.data.projectDataList
+      for (let i = 0; i < r.data.projectDataList.length; i++) {
+        let project=new Project(r.data.projectDataList[i].id,r.data.projectDataList[i].name,r.data.projectDataList[i].description,r.data.projectDataList[i].scale,r.data.projectDataList[i].leader)
+        projectList.value.push(project)
+      }
+      console.log('获取到的项目列表',projectList.value)
       if(projectList.value.length>0){
         store.commit('setProjects',projectList.value)
+        console.log('vuex中的项目列表',store.state.projects)
         store.commit('setHasProject',true)
         return true
       }else{
@@ -91,11 +96,8 @@ onMounted(()=>{
         if(r){
           let currentProjectId=window.localStorage.getItem(`${store.state.currentUser.id}_currentProject`)
           if(currentProjectId){
-            console.log('从本地存储获取到当前项目',currentProjectId)
             store.commit('setCurrentProjectId',parseInt(currentProjectId))
-            console.log('检查状态',store.state.currentProjectId)
           }else{
-            console.log('从本地存储获取到当前项目失败，设置为第一个项目')
             store.commit('setCurrentProjectId',projectList.value[0].id)
           }
           getRole(store.state.currentProjectId)

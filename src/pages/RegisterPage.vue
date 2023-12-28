@@ -2,15 +2,15 @@
 import axios from 'axios'
 import {ref} from 'vue'
 import {ElMessage} from 'element-plus'
-import {useRouter} from 'vue-router'
+import CryptoJS from 'crypto-js'
 
 const username = ref('')
 const password = ref('')
 const email = ref('')
 
-const router=useRouter()
 
 const login=(username:string,password:string)=>{
+  password=CryptoJS.MD5(password).toString()
   axios({
     method:'post',
     url:'/api/user/login',
@@ -27,14 +27,19 @@ const login=(username:string,password:string)=>{
       })
       let tokenvalue=res.data.data.tokenValue
       window.localStorage.setItem('token',tokenvalue)
-      router.push('/home')
+      window.location.reload()
     }else{
-      console.log('fail')
+      ElMessage({
+        message:`登录失败，${res.data.message}`,
+        type: 'error'
+      })
     }
   })
 }
 
 const register=(username:string,password:string,email:string)=>{
+  let originPassword=password
+  password=CryptoJS.MD5(password).toString()
   axios({
     method:'post',
     url:'/api/user/register',
@@ -51,7 +56,7 @@ const register=(username:string,password:string,email:string)=>{
         message: '注册成功，即将为你自动登陆',
         type: 'success'
       })
-      login(username,password)
+      login(username,originPassword)
     }else{
       console.log('fail')
       ElMessage({

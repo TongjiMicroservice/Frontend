@@ -46,6 +46,16 @@ const router = createRouter({
           component: ChatView,
         },
         {
+          path: '/task',
+          name: 'task',
+          component: TaskView,
+        },
+        {
+          path: '/meeting',
+          name: 'meeting',
+          component: MeetingView,
+        },
+        {
           path: '/docs',
           name: 'docs',
           component: DocumentsView,
@@ -77,7 +87,6 @@ const router = createRouter({
         }
       ]
     },
-
   ]
 })
 

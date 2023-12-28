@@ -1,22 +1,70 @@
+<script setup lang="ts">
+  import { ElMessage } from 'element-plus';
+  import { ref } from 'vue';
+
+  const taskTitle = ref('任务1');
+  const deadline = ref('2022-12-31');
+  const performance = ref('A+');
+  const submissionRequirement = ref('按时提交');
+  const taskContent = ref('任务详细要求');
+  const taskStatus=ref('办理中');
+  const submitDialogVisible = ref(false);
+  const fileList = ref([]);
+
+  const handlePreview = (file: any) => {
+    // 处理文件预览的逻辑
+    console.log('文件预览', file);
+  };
+  
+  const beforeRemove = (file: any) => {
+    // 处理文件移除前的逻辑
+    console.log('准备移除文件', file);
+    return true; // 返回true允许移除，返回false阻止移除
+  };
+
+  const handleSuccess = (response: any, file: any, fileList: any) => {
+    // 文件上传成功的逻辑
+    fileList.value = fileList;
+  };
+
+  const handleRemove = (file: any, fileList: any) => {
+    // 文件移除的逻辑
+    fileList.value = fileList;
+  };
+
+  const showSubmitDialog = () => {
+    submitDialogVisible.value = true;
+  };
+
+  const acceptTask = () => {
+
+  }
+
+  const submitTask = () => {
+    // 提交任务的逻辑
+   ElMessage.success('提交成功')
+    submitDialogVisible.value = false;
+  };
+</script>
+
 <template>
   <div class="task-submit-page">
-    <div class="task-info">
+    <el-card class="task-info">
       <h1 class="task-title">{{ taskTitle }}</h1>
       <el-divider></el-divider>
-      <div class="info-module">
+      <el-card class="info-card">
         <p>截止时间: {{ deadline }}</p>
         <p>绩效: {{ performance }}</p>
         <p>提交要求: {{ submissionRequirement }}</p>
-      </div>
-    
-    <el-divider></el-divider>
-    <div class="task-content">
-      <div class="content-module">
+      </el-card>
+      <el-card class="info-card">
         <p>任务内容: {{ taskContent }}</p>
-      </div>
-    </div>
-    <el-button class="submit" type="primary" @click="showSubmitDialog">提交</el-button>
-  </div>
+      </el-card>
+      <el-button v-if="taskStatus === '待办'" class=button @click="acceptTask">接受</el-button>
+      <el-button v-else-if="taskStatus === '办理中'" class=button @click="showSubmitDialog">提交</el-button>
+      <el-button v-else-if="taskStatus === '办结'" class=button @click="showSubmitDialog">重新提交</el-button>
+      <!--<el-button class="submit" type="primary" @click="showSubmitDialog">提交</el-button>-->
+    </el-card>
     <el-dialog title="提交任务" v-model="submitDialogVisible" width="30%">
       <el-upload
         class="upload-demo"
@@ -28,10 +76,9 @@
         :file-list="fileList"
         :auto-upload="false"
       >
-        <el-button size="small" type="primary">点击上传</el-button>
-        
+      <el-button size="small" type="primary">点击上传</el-button>    
       </el-upload>
-      <div slot="footer" class="dialog-footer">
+      <div  class="dialog-footer">
         <el-button @click="submitDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitTask">提交</el-button>
       </div>
@@ -75,44 +122,29 @@ export default {
 
 <style scoped>
 .task-submit-page {
-  padding: 20px;
+  display:flex;
+  justify-content: center; 
+  margin-bottom: 30px;
+  margin-top: 15px;
+  width:100%;
 }
-
-.task-info {
-  margin-bottom: 20px;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  background-color: #f5f5f5;
+.task-info{
+  width:50%;
+  background-color:#24273a;
 }
-
 .task-title {
   font-weight: bold;
   text-align: center;
   font-size: 24px;
   margin-bottom: 10px;
 }
-
-.info-module {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  margin: 0 10px;
-}
-
-.task-content {
-  margin: 0 10px;
+.info-card{
+  margin-left: 5px;
+  margin-right: 5px;
   margin-bottom: 20px;
+  margin-top:20px;
 }
-
-.content-module {
-  background-color: #fff;
-  border-radius: 10px;
-  padding: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.submit{
-  margin: 0 10px 20px;
+.button{
+  margin: 0 5px 20px;
 }
 </style>

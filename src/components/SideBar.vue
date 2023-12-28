@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import {useStore} from 'vuex'
+
+const store=useStore()
 </script>
 
 <template>
@@ -10,7 +13,7 @@
       router
     >
       <el-menu-item index="/person">
-        <el-avatar :size="25" src="/default_avatar.png"></el-avatar>
+        <el-avatar :size="25" :src="store.state.currentUser.avatar"></el-avatar>
         <template #title>个人信息</template>
       </el-menu-item>
       <el-menu-item index="/home">
@@ -18,6 +21,10 @@
         <template #title>主页</template>
       </el-menu-item>
       <el-menu-item index="/chat">
+        <el-icon><ChatDotRound /></el-icon>
+        <template #title>聊天</template>
+      </el-menu-item>
+      <el-menu-item index="/contact">
         <el-icon><UserFilled /></el-icon>
         <template #title>联系人</template>
       </el-menu-item>
@@ -25,9 +32,8 @@
         <el-icon><Document /></el-icon>
         <template #title>文档</template>
       </el-menu-item>
-      <el-menu-item index="/search">
-        <el-icon><Search /></el-icon>
-        <template #title>搜索项目</template>
+      <el-menu-item index="/meeting">
+        <el-icon><Document /></el-icon>
       </el-menu-item>
     </el-menu>
   </div>

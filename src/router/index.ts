@@ -5,10 +5,12 @@ import DocumentsView from '../views/DocumentsView.vue'
 import HomeView from '../views/HomeView.vue'
 import PersonView from '../views/PersonView.vue'
 import LoginPage from '@/pages/LoginPage.vue'
-import SearchView from "@/views/SearchView.vue";
 import RegisterPage from '@/pages/RegisterPage.vue'
 import CreatePage from "@/pages/CreatePage.vue";
 import SearchProjectPage from '@/pages/SearchProjectPage.vue'
+import ContactView from '@/views/ContactView.vue'
+import TaskView from '@/views/TaskView.vue'
+import MeetingView from '@/views/MeetingView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -32,6 +34,7 @@ const router = createRouter({
       name:'search_project',
       component: SearchProjectPage
     },
+    
     {
       path: '/',
       name: 'main',
@@ -58,9 +61,19 @@ const router = createRouter({
           component: PersonView,
         },
         {
-          path: '/search',
-          name: 'search',
-          component: SearchView,
+          path: '/contact',
+          name: 'contact',
+          component: ContactView,
+        },
+        {
+          path:'/task_view',
+          name:'task_view',
+          component: TaskView
+        },
+        {
+          path:'/meeting',
+          name:'meeting',
+          component:MeetingView
         }
       ]
     },

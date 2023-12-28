@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import {ref} from 'vue'
+import { onMounted, ref } from 'vue'
+import axios from 'axios'
+import {useStore} from 'vuex'
+
+const store=useStore()
+
 const finishedTask=ref([{
   title:'任务1',
   content:'完成任务1的内容',
@@ -64,6 +69,9 @@ const upcomingMeeting=ref([{
   content:'会议3的内容',
   time:'2021-10-10',
 }])
+
+
+
 </script>
 
 <template>

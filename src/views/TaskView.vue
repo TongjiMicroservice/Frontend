@@ -86,6 +86,40 @@
   </div>
 </template>
 
+<script lang="ts">
+export default {
+  data() {
+    return {
+      taskTitle: '任务1',
+      deadline: '2022-12-31',
+      performance: 'A+',
+      submissionRequirement: '按时提交',
+      taskContent: '任务内容描述',
+      submitDialogVisible: false,
+      fileList: []
+    };
+  },
+  methods: {
+    showSubmitDialog() {
+      this.submitDialogVisible = true;
+    },
+    submitTask() {
+      // 提交任务的逻辑
+      this.$message.success('提交成功');
+      this.submitDialogVisible = false;
+    },
+    handleSuccess(response, file, fileList) {
+      // 文件上传成功的逻辑
+      this.fileList = fileList;
+    },
+    handleRemove(file, fileList) {
+      // 文件移除的逻辑
+      this.fileList = fileList;
+    }
+  }
+};
+</script>
+
 <style scoped>
 .task-submit-page {
   display:flex;

@@ -7,7 +7,10 @@ import PersonView from '../views/PersonView.vue'
 import LoginPage from '@/pages/LoginPage.vue'
 import TaskView from '../views/TaskView.vue'
 import MeetingView from '../views/MeetingView.vue'
-
+import SearchView from "@/views/SearchView.vue";
+import RegisterPage from '@/pages/RegisterPage.vue'
+import CreatePage from "@/pages/CreatePage.vue";
+import SearchProjectPage from '@/pages/SearchProjectPage.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -15,6 +18,21 @@ const router = createRouter({
       path:'/login',
       name:'login',
       component:LoginPage
+    },
+    {
+      path:'/register',
+      name:'register',
+      component: RegisterPage
+    },
+    {
+      path:'/create_project',
+      name:'create_project',
+      component: CreatePage
+    },
+    {
+      path:'/search_project',
+      name:'search_project',
+      component: SearchProjectPage
     },
     {
       path: '/',
@@ -50,6 +68,11 @@ const router = createRouter({
           path: '/person',
           name: 'person',
           component: PersonView,
+        },
+        {
+          path: '/search',
+          name: 'search',
+          component: SearchView,
         }
       ]
     },

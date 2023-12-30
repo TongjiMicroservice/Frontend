@@ -15,6 +15,7 @@ import ScheduleView from '@/views/ScheduleView.vue'
 import ManageView from '@/views/ManageView.vue'
 import ProjectProgressView from '@/views/manage/ProjectProgressView.vue'
 import MemberManageView from '@/views/manage/MemberManageView.vue'
+import TaskManageView from '@/views/manage/TaskManageView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -108,6 +109,11 @@ const router = createRouter({
               path:'/manage/member',
               name:'member',
               component:MemberManageView,
+            },
+            {
+              path:'/manage/task',
+              name:'task',
+              component:TaskManageView,
             }
           ]
         }

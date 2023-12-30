@@ -106,31 +106,13 @@ const getRole=async (projectId:number)=>{
     }
   })
 }
-const currentUser=computed(()=>{
-  return store.state.currentUser
+const currentProjectId=computed(()=>{
+  return store.state.currentProjectId
 })
 
-watch(currentUser ,()=>{
-  console.log('currentUser changed')
-  getProjectList().then((r)=>{
-    if(r){
-      let currentProjectId=window.localStorage.getItem(`${store.state.currentUser.id}_currentProject`)
-      if(currentProjectId){
-        store.commit('setCurrentProjectId',parseInt(currentProjectId))
-      }else{
-        store.commit('setCurrentProjectId',projectList.value[0].id)
-      }
-      currentProject.value=projectList.value.find((project)=>project.id===store.state.currentProjectId)!
-      getRole(store.state.currentProjectId)
-      ElMessage({
-        message: store.state.currentUser.name+'，进入项目'+currentProject.value.name,
-        type: 'success'
-      })
-      router.push('/home')
-    }else{
-      router.push('/create_project')
-    }
-  })
+watch(currentProjectId ,()=>{
+  projectList.value=store.state.projects
+  currentProject.value=store.state.projects.find((project:Project)=>project.id===currentProjectId.value)!
 })
 </script>
 

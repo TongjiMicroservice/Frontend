@@ -1,7 +1,7 @@
 
 <template>
   <div class="flex h-full w-full">
-    <div class="h-full w-1/5">
+    <div class="h-full w-1/6">
       <el-menu 
         class="manage-sidebar"
         default-active="/manage/project"
@@ -16,6 +16,11 @@
           <template #title>
             <span>项目成员管理</span>
           </template>
+        </el-menu-item>
+        <el-menu-item index="/manage/task">
+            <template #title>
+                <span>项目任务管理</span>
+            </template>
         </el-menu-item>
       </el-menu>
     </div>

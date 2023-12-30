@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import MainPage from '../pages/MainPage.vue'
-import ChatView from '../views/ChatView.vue'
+import ChatView from '@/views/ChatView.vue'
 import DocumentsView from '../views/DocumentsView.vue'
 import HomeView from '../views/HomeView.vue'
 import PersonView from '../views/PersonView.vue'
@@ -11,6 +11,8 @@ import SearchProjectPage from '@/pages/SearchProjectPage.vue'
 import ContactView from '@/views/ContactView.vue'
 import TaskView from '@/views/TaskView.vue'
 import MeetingView from '@/views/MeetingView.vue'
+import ScheduleView from '@/views/ScheduleView.vue'
+import ManageView from '@/views/ManageView.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -84,6 +86,16 @@ const router = createRouter({
           path:'/meeting',
           name:'meeting',
           component:MeetingView
+        },
+        {
+          path:'/schedule',
+          name:'schedule',
+          component:ScheduleView
+        },
+        {
+          path:'/manage',
+          name:'manage',
+          component:ManageView
         }
       ]
     },

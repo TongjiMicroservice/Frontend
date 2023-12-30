@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import {useStore} from 'vuex'
+import {computed, watch,ref} from 'vue'
 
 const store=useStore()
+
+const role=computed(()=>store.state.role)
+
 </script>
 
 <template>
@@ -28,6 +32,10 @@ const store=useStore()
         <el-icon><UserFilled /></el-icon>
         <template #title>联系人</template>
       </el-menu-item>
+      <el-menu-item index="/schedule">
+        <el-icon><Bell /></el-icon>
+        <template #title>日程</template>
+      </el-menu-item>
       <el-menu-item index="/docs">
         <el-icon><Document /></el-icon>
         <template #title>文档</template>
@@ -35,6 +43,10 @@ const store=useStore()
       <el-menu-item index="/meeting">
         <el-icon><Histogram /></el-icon>
         <template #title>会议</template>
+      </el-menu-item>
+      <el-menu-item index="/manage" v-if="role==='admin'||role==='leader'">
+        <el-icon><Tools /></el-icon>
+        <template #title>管理</template>
       </el-menu-item>
     </el-menu>
   </div>

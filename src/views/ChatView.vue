@@ -1,6 +1,3 @@
-<script setup lang="ts">
-import ChatList from '@/components/Chat/ChatList.vue'
-</script>
 
 <template>
   <div>
@@ -34,21 +31,21 @@ import ChatList from '@/components/Chat/ChatList.vue'
     <!-- 消息记录 -->
     <div class="chat-container">
 
-      <div class="message-history">
-        <div v-for="msg in currentChatHistory" :key="msg.timestamp" class="message" :class="{ 'sent': msg.senderId === userId, 'received': msg.senderId !== userId }">
-          {{ msg.senderId }}:<span class="timestamp">{{ new Date(msg.timestamp).toLocaleString() }}</span><br>
-          <div class="message-content">
-            <div class="message-metadata">
-              <!-- 使用符号来表示已读和未读 -->
-              <div>{{ msg.message }}</div>
+        <div class="message-history">
+          <div v-for="msg in currentChatHistory" :key="msg.timestamp" class="message" :class="{ 'sent': msg.senderId === userId, 'received': msg.senderId !== userId }">
+            {{ msg.senderId }}:<span class="timestamp">{{ new Date(msg.timestamp).toLocaleString() }}</span><br>
+            <div class="message-content">
+              <div class="message-metadata">
+                <!-- 使用符号来表示已读和未读 -->
+                <div>{{ msg.message }}</div>
+              </div>
             </div>
+            <span class="read-status">{{ msg.isRead ? '✔️' : '🕒' }}</span>
           </div>
-          <span class="read-status">{{ msg.isRead ? '✔️' : '🕒' }}</span>
         </div>
-      </div>
 
 
-      <!-- 消息容器 -->
+    <!-- 消息容器 -->
       <div class="message-container">
         <button @click="toggleEmojiPanel">😀</button>
         <div v-if="showEmojis" class="emoji-container">
@@ -64,9 +61,174 @@ import ChatList from '@/components/Chat/ChatList.vue'
         </el-input>
         <el-button color="#626aef" :dark="isDark" @click="sendMessage">发送</el-button>
       </div>
+  </div>
+    <div class="chat-user-info">
+      <h3>聊天者信息</h3>
+      <div>ID: {{ userId }}</div>
+      <!-- 这里可以添加更多聊天者的信息 -->
     </div>
   </div>
 </template>
+<script>
+import io from 'socket.io-client';
+import emojiData from "../emoji.json";
+
+export default {
+  data() {
+    return {
+      identityOptions: [
+        { name: "A", contactId: "A" },
+        { name: "B", contactId: "B" },
+    { name: "C", contactId: "C" }
+        // 可以根据需要添加更多选项
+      ],
+      currentChatHistory: [],
+      userId: 'A', // 假设的当前用户ID
+      ids: [...Array(26)].map((_, i) => String.fromCharCode(65 + i)), // 生成从 A 到 Z 的 ID 数组
+      selectedId: 'Z',
+      socket: null,
+      // identity: '',
+      message: '',
+      showEmojis: false,
+      emojis: emojiData.data.split(','),
+    };
+  },
+  mounted() {
+    this.initializeChat();
+    // this.socket = io('http://localhost:9092');
+    //
+    // this.socket.on('messageEvent', (data) => {
+    //   console.log('Message from server:', data);
+    // });
+    //
+    // this.socket.emit('requestRecentChats', this.userId );
+    //
+    // // this.socket.on('recentChatResponse', (data) => {
+    // //   this.identityOptions = data.map(item => {
+    // //     return { name: item.contactId, contactId: item.contactId };
+    // //   });
+    // // });
+    // this.socket.on('recentChatResponse', (data) => {
+    //   this.identityOptions = data.map(item => {
+    //     return { name: item.contactId, contactId: item.contactId };
+    //   });
+    // });
+    // // 前端接收聊天记录并更新界面
+    // this.socket.on('chatHistoryResponse', (data) => {
+    //   this.currentChatHistory = data.map(msg => {
+    //     return {
+    //       senderId: msg.senderId,
+    //       message: msg.message,
+    //       timestamp: msg.timestamp,
+    //       isRead:msg.isRead,
+    //     };
+    //   });
+    // });
+
+  },
+  methods: {
+    //加载聊天记录
+    loadChatHistory(contactId) {
+      this.socket.emit('fetchChatHistory', { senderId: this.userId, receiverId: this.selectedId });
+      this.updateRead(contactId);
+    },
+    //选择联系人
+    selectIdentity(selectedId) {
+      this.selectedId = selectedId;
+      console.log("Chat with:",selectedId);
+      this.updateRead(selectedId);
+      this.socket.emit('updateReadStatus', {
+        senderId: selectedId,
+        receiverId: this.userId
+      });
+
+      this.loadChatHistory(selectedId);
+
+    },
+
+    updateRead(selectedId){
+      this.socket.emit('updateReadStatus', {
+        senderId: selectedId,
+        receiverId: this.userId
+      });
+    },
+    //发送信息
+    sendMessage() {
+      const now = new Date();
+      // 格式化时间戳，例如: '2023-03-15T14:20:00Z'
+      const timestamp = now.toISOString();
+      console.log("Sending message:", { senderId:this.userId,receiverId: this.selectedId, message: this.message ,timestamp: timestamp,isRead: false});
+      this.socket.emit('messageEvent', { senderId:this.userId,receiverId: this.selectedId, message: this.message ,timestamp: timestamp,isRead: false});
+      // this.socket.emit('simpleMessageEvent', 'Hello, world!');
+
+
+      const newMessage = {
+        senderId: this.userId,
+        receiverId: this.selectedId,
+        message: this.message,
+        timestamp: timestamp,
+      };
+    //从输入框清除消息
+      this.currentChatHistory.push(newMessage);
+      this.message = '';
+    },
+    toggleEmojiPanel() {
+      this.showEmojis = !this.showEmojis;
+    },
+    addEmojiToInput(emoji) {
+      this.message += emoji;
+      this.showEmojis = false;
+    },
+    initializeChat() {
+      this.socket = io('http://localhost:9092');
+      // this.socket.emit('Authorize', this.userId);
+      this.socket.on('messageEvent', (data) => {
+        console.log('Message from server:', data);
+        if (data.receiverId === this.userId) {
+          // 如果是，调用 loadChatHistory 方法加载聊天记录
+          // 假设 senderId 是从 data 中获取的发送者ID
+          const senderId = data.senderId;
+          // this.updateRead(senderId);
+          this.loadChatHistory(senderId);
+        }
+      });
+      this.socket.on('readStatusUpdated', (updatedSender) => {
+        console.log('Read status updated for messages from:', updatedSender);
+
+        // 如果当前选中的聊天对象是更新消息的发送者，重新加载聊天记录
+        if (updatedSender=== this.userId) {
+          this.loadChatHistory(updatedSender);
+        }
+      });
+      this.socket.emit('requestRecentChats', this.userId);
+
+      this.socket.on('recentChatResponse', (data) => {
+        this.identityOptions = data.map(item => {
+          return { name: item.contactId, contactId: item.contactId };
+        });
+      });
+
+      this.socket.on('chatHistoryResponse', (data) => {
+        this.currentChatHistory = data.map(msg => {
+          return {
+            senderId: msg.senderId,
+            message: msg.message,
+            timestamp: msg.timestamp,
+            isRead: msg.isRead,
+          };
+        });
+      });
+    }
+  },
+  watch: {
+    userId(newUserId, oldUserId) {
+      if (newUserId !== oldUserId) {
+        this.initializeChat();
+      }
+    }
+  },
+};
+</script>
 
 <style>
 .chat-app {
@@ -98,7 +260,7 @@ import ChatList from '@/components/Chat/ChatList.vue'
   background-color: #b2b2cc; /* 选中时的背景色 */
 }
 .chat-container {
-  flex-grow: 1; /* 如果您想让聊天区域占据剩余空间 */
+  flex-grow: 1; /* 让聊天区域占据剩余空间 */
   display: flex;
   flex-direction: column;
   width: 75%; /* 设置聊天容器的宽度 */
@@ -202,5 +364,12 @@ import ChatList from '@/components/Chat/ChatList.vue'
   cursor: pointer;
   margin: 5px;
 }
+.chat-user-info {
 
+  width: 250px; /* 调整宽度 */
+  padding: 5px;
+  border-right: 1px solid #ccc;
+  margin-right: 1px;
+  background-color: white; /* 设置背景色为白色 */
+}
 </style>

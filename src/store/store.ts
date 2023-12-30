@@ -1,3 +1,13 @@
+/*
+ * @Author: fengye7 zcj2518529668@163.com
+ * @Date: 2023-12-30 11:06:12
+ * @LastEditors: fengye7 zcj2518529668@163.com
+ * @LastEditTime: 2023-12-30 11:07:21
+ * @FilePath: \Frontend\src\store\store.ts
+ * @Description: 
+ * 
+ * Copyright (c) 2023 by ${git_name_email}, All Rights Reserved. 
+ */
 import {createStore} from 'vuex'
 import User from '@/models/User'
 import Project from '@/models/Project'

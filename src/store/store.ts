@@ -43,6 +43,9 @@ export default createStore({
         },
         setHasProject(state, hasProject:boolean){
             state.hasProject = hasProject
+        },
+        updateUser(state, user: User) {
+            state.currentUser = user
         }
     },
 })

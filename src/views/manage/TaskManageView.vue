@@ -7,7 +7,7 @@ import { useStore } from 'vuex';
 import { Plus } from '@element-plus/icons-vue';
 
 const store = useStore();
-const pageSize=ref(8);
+const pageSize=ref(3);
 const currentPage=ref(1);
 
 const currentTask=ref<Task>(new Task(-1,'','',-1,new Date,-1))
@@ -24,6 +24,8 @@ const currentProjectMembers=ref<{
   avatar:string
   privilege:number
 }[]>([])
+
+const tasksDiv=ref<HTMLElement|null>(null)
 
 const taskList = ref<Task[]>([]);
 
@@ -64,6 +66,7 @@ const waitToAddMembers=ref<{
 }[]>([])
 
 const getTaskMembers=(taskId:number)=>{
+  currentTaskMembers.value=[]
   axios({
     method:'get',
     url:'/api/task/member/get',
@@ -82,7 +85,7 @@ const getTaskMembers=(taskId:number)=>{
         }).then((r)=>{
           if(r.status===200&&r.data.code===200){
             let user={
-              userId:r.data.userid,
+              userId:r.data.userId,
               username:r.data.username,
               avatar:r.data.avatar
             }
@@ -106,6 +109,7 @@ const getTaskMembers=(taskId:number)=>{
 }
 
 const getTaskList = ():Promise<Boolean> => {
+  taskList.value=[]
   return axios({
     method: 'get',
     url: '/api/task/list-by-project',
@@ -155,7 +159,6 @@ const getCurrentProjectMembers=()=>{
               privilege:data[i].privilege
             }
             currentProjectMembers.value.push(user)
-            console.log(currentProjectMembers.value)
           }else{
             ElMessage({
               message: `获取项目成员失败，${r.data.message}`,
@@ -175,17 +178,22 @@ const getCurrentProjectMembers=()=>{
 
 const addTaskMemberVisible=ref(false)
 
+
 const showAddTaskMember=()=>{
   addTaskMemberVisible.value=true
   toAddMembers.value=[]
   waitToAddMembers.value=currentProjectMembers.value
   waitToAddMembers.value=waitToAddMembers.value.filter((member)=>{
-    return member.userId!==store.state.currentUser.id&&currentTaskMembers.value.every((taskMember)=>{
-      return taskMember.userId!==member.userId
-    })
+    return member.userId!==store.state.currentUser.id
   })
-  getTaskMembers(currentTask.value.taskId)
 
+  console.log('shaizhjqian',waitToAddMembers.value)
+
+  waitToAddMembers.value=waitToAddMembers.value.filter((member)=>{
+    return !currentTaskMembers.value.some((m) => m.userId === member.userId)
+  })
+
+  console.log('shaizhihou',waitToAddMembers.value)
 }
 
 const addTaskMember=(id:number)=>{
@@ -194,7 +202,7 @@ const addTaskMember=(id:number)=>{
       toAddMembers.value.push(member)
     }
   })
-  waitToAddMembers.value=currentProjectMembers.value.filter((member)=>{
+  waitToAddMembers.value=waitToAddMembers.value.filter((member)=>{
     return member.userId!==id
   })
 }
@@ -216,28 +224,32 @@ const removeTaskMember=(id:number)=>{
 
 const addAllTaskMember=()=>{
   addTaskMemberVisible.value=false
-  toAddMembers.value.forEach((member)=>{
-    axios({
-      method:'post',
-      url:'/api/task/member/add',
-      params:{
-        taskId:currentTask.value.taskId,
-        memberId:member.userId
+  const promises = toAddMembers.value.map((member) => {
+    return axios({
+      method: 'post',
+      url: '/api/task/member/add',
+      params: {
+        taskId: currentTask.value.taskId,
+        memberId: member.userId
       }
-    }).then((res)=>{
-      if(res.status===200&&res.data.code===200){
+    }).then((res) => {
+      if (res.status === 200 && res.data.code === 200) {
         ElMessage({
           message: `添加任务成员${member.username}成功`,
           type: 'success',
         });
-      }else{
+      } else {
         ElMessage({
           message: `添加任务成员${member.username}失败，${res.data.message}`,
           type: 'error',
         });
       }
     })
-  })
+  });
+
+  Promise.all(promises).then(() => {
+    getTaskMembers(currentTask.value.taskId)
+  });
 }
 
 const view=ref('task_overview')
@@ -275,11 +287,29 @@ const createTask=()=>{
   })
 }
 
+const windowWidth=ref(window.innerWidth)
+const windowHeight=ref(window.innerHeight)
+
+const getScreenSize=()=>{
+  windowWidth.value=window.innerWidth
+  windowHeight.value=window.innerHeight
+
+  pageSize.value=(Math.floor((windowWidth.value)*(0.6)/300))*(Math.floor(windowHeight.value/325))
+}
+
+
+
 
 onMounted(() => {
   getTaskList()
 
   getCurrentProjectMembers()
+
+  window.addEventListener('resize',getScreenSize)
+
+  getScreenSize()
+
+
 })
 </script>
 
@@ -302,7 +332,7 @@ onMounted(() => {
       </el-radio-group>
       <el-button class="mr-20" type="primary" @click="createTaskVisible=true">创建任务</el-button>
     </div>
-    <el-space wrap class="h-1/3" v-if="view==='task_overview'">
+    <el-space wrap  v-if="view==='task_overview'" ref="tasksDiv">
       <p v-if="taskList.length===0">项目还没有任务，请<span class="create-task" @click="createTaskVisible=true">创建</span>项目的第一个任务</p>
       <div v-else v-for="(task,index) in showTaskList.slice(start,start+pageSize)" :key="index" class="w-1/3 p-3" @click="handleTaskOpen(task)">
         <div class="task-card">
@@ -392,17 +422,17 @@ onMounted(() => {
         </span>
       </template>
     </el-dialog>
-    <el-row class="h-1/3" v-if="view==='task_overview'">
-      <el-col :span="10"/>
+    <div class="py-3 flex justify-center items-center" v-if="view==='task_overview'">
       <el-pagination layout="prev, pager, next" :total="showTaskList.length" background :page-size="pageSize" v-model:current-page="currentPage" />
-    </el-row>
+    </div>
   </div>
 </template>
 
 <style scoped>
 .task-card {
-  width: 100%;
-  height: 100%;
+  width: 300px;
+  min-height: 150px;
+  max-height: 300px;
   background-color: #24273a;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);

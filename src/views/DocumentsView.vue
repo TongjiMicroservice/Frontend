@@ -11,16 +11,6 @@
             class="search-input"
         />
 
-        <!-- 文件上传按钮 -->
-<!--        <el-upload-->
-<!--            class="upload-demo"-->
-<!--            action="http://example.com/upload"-->
-<!--            :on-success="handleUploadSuccess"-->
-<!--            :on-error="handleUploadError"-->
-<!--            style="margin-left: auto;"-->
-<!--        >-->
-<!--          <el-button size="small" type="primary">点击上传</el-button>-->
-<!--        </el-upload>-->
       </div>
     </el-header>
 
@@ -29,8 +19,8 @@
         <el-upload
             class="upload-demo "
             drag
-            action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
-            :data="{ userId:userId.value, username: projectId.value[0]?.id }"
+            action="http://localhost:8090/api/file?userId=7&projectId=10"
+
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
             multiple
@@ -81,10 +71,10 @@ import { useStore } from 'vuex';
 import Project from "@/models/Project";
 
 
-const store = useStore();
-
-const userId = computed(() => store.state.currentUser.id);
-const projectId = computed(() => store.state.projects);
+// const store = useStore();
+//
+// const userId = computed(() => store.state.currentUser.id);
+// const projectId = computed(() => store.state.projects);
 export default defineComponent({
   name: 'FileManager',
   components: {
@@ -103,11 +93,14 @@ export default defineComponent({
       // 更多文件数据
     ]);
 
-    const store = useStore();
-    const projectId = computed(() => store.state.projects);
-    const userId = computed(() => store.state.currentUser.id);
-    console.log(userId.value)
-    console.log(projectId.value[0].id)
+    // const store = useStore();
+    // const projectId = computed(() => store.state.projects);
+    // const userId = computed(() => store.state.currentUser.id);
+    // console.log(userId.value)
+    // console.log(projectId.value[0].id)
+
+
+
     const filteredFiles = computed(() => {
       if (!searchQuery.value) {
         return files;
@@ -143,33 +136,34 @@ export default defineComponent({
       console.error("Upload Error:", err, file, fileList);
       // 这里可以添加逻辑来处理上传错误
     };
-    onMounted(async () => {
-      try {
-        // 发送 GET 请求到你的后端接口
-        const response = await fetch('http://localhost:8090/api/file-by-project?projectId=10');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.code === 200 && data.list) {
-            // 使用从后端获取的数据覆盖前端的数据
-            files.splice(0, files.length, ...data.list.map(item => ({
-              name: item.name + '.' + item.type, // 添加文件扩展名
-              date: item.uploadTime,
-              type: item.type,
-              url: item.url,
-              userId: item.userId,
-              projectId: item.projectId,
-              size: item.size
-            })));
-          } else {
-            console.error('获取数据失败:', data.message);
-          }
-        } else {
-          console.error('HTTP 请求错误:', response.status);
-        }
-      } catch (error) {
-        console.error('请求发生错误:', error);
-      }
-    });
+    // onMounted(async () => {
+    //   try {
+    //     // 发送 GET 请求到你的后端接口
+    //     const response = await fetch('http://localhost:8090/api/file-by-project?projectId=10');
+    //     if (response.ok) {
+    //       const data = await response.json();
+    //       if (data.code === 200 && data.list) {
+    //         // 使用从后端获取的数据覆盖前端的数据
+    //         files.splice(0, files.length, ...data.list.map(item => ({
+    //           name: item.name + '.' + item.type, // 添加文件扩展名
+    //           date: item.uploadTime,
+    //           type: item.type,
+    //           url: item.url,
+    //           userId: item.userId,
+    //           projectId: item.projectId,
+    //           size: item.size
+    //         })));
+    //       } else {
+    //         console.error('获取数据失败:', data.message);
+    //       }
+    //     } else {
+    //       console.error('HTTP 请求错误:', response.status);
+    //     }
+    //   } catch (error) {
+    //     console.error('请求发生错误:', error);
+    //   }
+    // }
+    // );
     return {
       searchQuery,
       filteredFiles,
@@ -178,8 +172,8 @@ export default defineComponent({
       deleteFile,
       handleUploadSuccess,
       handleUploadError,
-      userId,
-      projectId,
+      // userId,
+      // projectId,
     };
   },
 });

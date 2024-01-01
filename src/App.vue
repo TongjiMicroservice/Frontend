@@ -2,25 +2,22 @@
 import {RouterView } from 'vue-router'
 import axios from 'axios'
 import {ElMessage} from 'element-plus'
-import {useRoute,useRouter} from 'vue-router'
+import {useRouter} from 'vue-router'
 import {useStore} from 'vuex'
-import { onBeforeMount,ref } from 'vue'
+import { onBeforeMount,ref} from 'vue'
 import User from '@/models/User'
 import Project from '@/models/Project'
 
-const store=useStore()
-const router=useRouter()
-
 const projectList=ref<Project[]>([])
 const currentProject=ref<Project>(new Project(-1,'','',-1,-1))
+
+const store=useStore()
+const router=useRouter()
 
 const getProjectList=async ():Promise<boolean>=>{
   return axios({
     method: 'get',
     url: '/api/project/project-by-user',
-    params: {
-      userId: store.state.currentUser.id
-    }
   }).then((r)=>{
     if(r.status===200&&r.data.code===200){
       for (let i = 0; i < r.data.projectDataList.length; i++) {
@@ -50,6 +47,7 @@ const getProjectList=async ():Promise<boolean>=>{
     }
   })
 }
+
 
 const getRole=async (projectId:number)=>{
   axios({
@@ -89,10 +87,11 @@ onBeforeMount(()=>{
   }).then((res)=>{
     if(res.status===200&&res.data.code===200){
       currentUser.avatar=res.data.avatar
-      currentUser.id=res.data.userid
+      currentUser.id=res.data.userId
       currentUser.email=res.data.email
       currentUser.name=res.data.username
       store.commit('login',currentUser)
+
       getProjectList().then((r)=>{
         if(r){
           let currentProjectId=window.localStorage.getItem(`${store.state.currentUser.id}_currentProject`)
@@ -112,6 +111,7 @@ onBeforeMount(()=>{
           router.push('/create_project')
         }
       })
+      router.push('/home')
     }else{
       if(res.data.code===401){
         ElMessage({
@@ -124,8 +124,6 @@ onBeforeMount(()=>{
     }
   })
 })
-
-
 </script>
 
 <template>

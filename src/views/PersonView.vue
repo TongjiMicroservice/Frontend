@@ -28,10 +28,6 @@
           <el-input v-model="userEmail" :disabled="!editMode"></el-input>
         </el-form-item>
   
-        <!-- Message -->
-        <el-form-item label="Message">
-          <el-input v-model="userMessage" :disabled="!editMode"></el-input>
-        </el-form-item>
 
         <el-form-item label="password" v-if="editMode">
           <el-input v-model="userPassword" :disabled="!editMode"></el-input>
@@ -55,10 +51,12 @@
   
     <div id="content" style="width:40%; float:right; height: 500px; box-sizing: border-box;">
       <el-scrollbar max-height="500px" >
-        <div v-for="project in projects" :key="project.id">
-          <Project :projectName="project.name" :projectId="project.id" />
+        <div v-for="project in projectList" :key="project.id">
+          <ProjectCard :project=project />
         </div>
-        <el-button :icon="plus">添加项目</el-button>
+        <div class="centered-container">
+          <el-button type="primary" @click="addProgram">添加项目</el-button>
+        </div>
       </el-scrollbar>
     </div>
     <div id="footer" style="clear:both; text-align:center;">
@@ -71,21 +69,23 @@
   
   <script setup lang="ts">
   import { onMounted } from 'vue';
-  import Project from "@/components/Project.vue";
+  import ProjectCard from "@/components/ProjectCard.vue";
   import { useStore } from 'vuex'
+  import {useRouter} from 'vue-router'
   import { ref } from 'vue'
   import User from "@/models/User";
   import { ElMessage } from "element-plus";
   import axios from "axios";
   import { MD5 } from "crypto-js";
+  import Project from '@/models/Project'
   const store = useStore()
-
+  const router=useRouter()
+  const projectList=ref<Project[]>([])
 
   const usrAvatar = ref(store.state.currentUser.avatar)
   const userId = ref(store.state.currentUser.id)
   const userName = ref(store.state.currentUser.name)
   const userEmail = ref(store.state.currentUser.email)
-  const userMessage = ref('')
 
   const userPassword = ref('')
 
@@ -95,14 +95,12 @@
     editMode.value = true
   }
 
+  const addProgram = () => {
+    router.push('/create_project')
+    
+  }
+
   const getUserInfor = () => {
-    console.log("获取用户信息",store.state.currentUser.id,)
-    //  "code": 0,
-    //"message": "string",
-    //"userId": 0,
-    //"username": "string",
-    //"email": "string",
-    //"avatar": "string"
     console.log(store.state.currentUser.id)
     axios({
       method: 'get',
@@ -115,16 +113,14 @@
         
         if (r.status === 200 && r.data.code === 200) {
           ElMessage({
-            message: '获取成功',
+            message: '用户信息获取成功',
           })
-          userMessage.value = r.data.data.message
-          userId.value = r.data.data.userId
           userName.value = r.data.data.username
           userEmail.value = r.data.data.email
           usrAvatar.value = r.data.data.avatar
         } else {
           ElMessage({
-            message: `获取失败,${r.data.message}`,
+            message: `用户信息获取失败,${r.data.message}`,
             type: 'error'
           })
         }
@@ -134,6 +130,40 @@
         console.error('Axios Error:', error);
   });
   }
+
+  const getProjectList= ()=>{
+    axios({
+      method: 'get',
+      url: '/api/project/project-by-user',
+
+    }).then((r)=>{
+        if (r.status === 200 && r.data.code === 200) {
+          ElMessage({
+            message: '获取项目列表成功',
+          })
+          console.log('获取到的项目列表长度',r.data.projectDataList.length)
+          for (let i = 0; i < r.data.projectDataList.length; i++) {
+            let project=new Project(r.data.projectDataList[i].id,r.data.projectDataList[i].name,r.data.projectDataList[i].description,r.data.projectDataList[i].scale,r.data.projectDataList[i].leader)
+            projectList.value.push(project)
+          }
+          console.log('获取到的项目列表',projectList.value)
+          if(projectList.value.length>0){
+            store.commit('setProjects',projectList.value)
+            console.log('vuex中的项目列表',store.state.projects)
+            store.commit('setHasProject',true)
+            return true
+          }
+      }else{
+        ElMessage({
+          message: `获取项目列表失败,${r.data.message}`,
+          type: 'error'
+        })
+        return false
+      }
+    })
+  }
+
+
   const confirmEdit = () => {
     console.log("修改密码")
     if (userPassword.value !== confirmPassword.value) {
@@ -175,7 +205,7 @@
         console.error('Axios Error:', error);
   });
 
-  }
+  } 
 
   const cancelEdit = () => {
     editMode.value = false
@@ -185,11 +215,22 @@
 
   onMounted(() => {
     getUserInfor();
+    getProjectList();
   });
   
   </script>
   
   
   <style scoped>
+  .centered-container {
+  display: flex;
+  align-items: center; /* 垂直居中对齐 */
+  justify-content: center; /* 水平居中对齐 */
+}
+
+/* 如果需要垂直居中对齐，可以添加以下样式 */
+.centered-container > * {
+  margin: 0 8px; /* 用于调整图标和按钮之间的间距 */
+}
   </style>
   

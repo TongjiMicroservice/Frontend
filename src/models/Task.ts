@@ -1,5 +1,3 @@
-import User from "./User"
-
 export default class Task{
     taskId:number
     name:string

@@ -18,9 +18,6 @@ const getProjectList=async ():Promise<boolean>=>{
   return axios({
     method: 'get',
     url: '/api/project/project-by-user',
-    params: {
-      userId: store.state.currentUser.id
-    }
   }).then((r)=>{
     if(r.status===200&&r.data.code===200){
       for (let i = 0; i < r.data.projectDataList.length; i++) {
@@ -90,7 +87,7 @@ onBeforeMount(()=>{
   }).then((res)=>{
     if(res.status===200&&res.data.code===200){
       currentUser.avatar=res.data.avatar
-      currentUser.id=res.data.userid
+      currentUser.id=res.data.userId
       currentUser.email=res.data.email
       currentUser.name=res.data.username
       store.commit('login',currentUser)

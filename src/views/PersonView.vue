@@ -65,9 +65,9 @@
   </div>
   
   
-  </template>
+</template>
   
-  <script setup lang="ts">
+<script setup lang="ts">
   import { onMounted } from 'vue';
   import ProjectCard from "@/components/ProjectCard.vue";
   import { useStore } from 'vuex'
@@ -221,8 +221,8 @@
   </script>
   
   
-  <style scoped>
-  .centered-container {
+<style scoped>
+.centered-container {
   display: flex;
   align-items: center; /* 垂直居中对齐 */
   justify-content: center; /* 水平居中对齐 */
@@ -232,5 +232,5 @@
 .centered-container > * {
   margin: 0 8px; /* 用于调整图标和按钮之间的间距 */
 }
-  </style>
+</style>
   

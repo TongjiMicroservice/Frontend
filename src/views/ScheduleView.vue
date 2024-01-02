@@ -1,194 +1,118 @@
-<template>
-  <div>
-    <el-calendar v-model="this.selectedDate" ref="calendar" @ready="handleCalendarReady()">
-      <template #date-cell="{ data }">
-        <div class="calendar-item" :class="data.isSelected ? 'is-selected' : ''">
-          <div class="calendar-time">
-            {{ data.day.split('-').slice(2).join('') }}
-          </div>
-          <div>
-            <span
-              class="remark-text calendar-time"
-              v-for="(item, index) in dealMyDate(data.day)"
-              :key="index"
-            >
-              {{ item }}
-            </span>
-          </div>
-        </div>
-      </template>
-    </el-calendar>
-
-    <el-dialog v-model="centerDialogVisible" title="设置日程" width="30%" center>
-      <el-form>
-        <el-form-item label="日期">
-          <el-date-picker
-            v-model="selectedDate"
-            type="date"
-            :placeholder="selectedDate"
-          ></el-date-picker>
-        </el-form-item>
-
-        <el-form-item label="时间">
-          <el-time-picker v-model="selectedTime" placeholder="请选择时间"></el-time-picker>
-        </el-form-item>
-
-        <el-form-item label="标题">
-          <el-input v-model="title" placeholder="请输入标题"></el-input>
-        </el-form-item>
-
-        <el-form-item label="详情">
-          <el-input v-model="details" placeholder="请输入详情" clearable></el-input>
-        </el-form-item>
-
-        <template #footer>
-          <span class="dialog-footer">
-            <el-button @click="centerDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="saveSchedule">保存</el-button>
-          </span>
-        </template>
-      </el-form>
-    </el-dialog>
-
-    <el-dialog
-      v-model="popoverSecheduleVisible"
-      title="日程详细信息"
-      width="30%"
-      :text-align="center"
-      @close="popoverSecheduleVisible = false"
-    >
-      <el-row>
-        <el-col :span="8"><strong>日期:</strong></el-col>
-        <el-col :span="16">{{ selectedDate }}</el-col>
-      </el-row>
-      <el-row>
-        <el-col :span="8"><strong>时间:</strong></el-col>
-        <el-col :span="16">{{ selectedTime }}</el-col>
-      </el-row>
-      <el-row>
-        <el-col :span="8"><strong>标题:</strong></el-col
-        ><!--这里的绑定信息改成后端读取到的信息-->
-        <el-col :span="16">{{ title }}</el-col>
-      </el-row>
-      <el-row>
-        <el-col :span="8"><strong>详情:</strong></el-col>
-        <el-col :span="16">{{ details }}</el-col>
-      </el-row>
-    </el-dialog>
-  </div>
-</template>
-
-<script>
-import { ref } from 'vue'
-
-export default {
-  name: 'MySchedule',
-  data() {
-    return {
-      resDate: [
-        { date: '2023-12-23', content: '放假' },
-        { date: '2023-12-01', content: '放假' },
-        { date: '2023-12-02', content: '划水' },
-        { date: '2023-12-24', content: '学习vue' },
-        { date: '2023-12-25', content: '学习vue' },
-        { date: '2023-12-26', content: '学习vue' },
-        { date: '2023-12-27', content: '学习vue' },
-        { date: '2023-12-28', content: '学习vue' }
-      ],
-      centerDialogVisible: false,
-      popoverSecheduleVisible: false,
-      selectedDate: null,
-      selectedTime: null,
-      title: '',
-      details: null
-      //这里添加显示的日程详细信息
-    }
-  },
-  mounted() {
-    this.handleCalendarReady()
-  },
-  methods: {
-    dealMyDate(v) {
-      let res = ''
-      for (let index = 0; index < this.resDate.length; index++) {
-        if (this.resDate[index].date === v) {
-          res = this.resDate[index].content
-          break
-        }
-      }
-      return res
-    },
-    // handleClickCalendarItem(isSelected, day) {
-    //   if (isSelected) {
-    //     console.log('储存了日期数据：', day)
-    //     this.selectedDate = day
-    //   }
-    // },
-    handleCalendarReady() {
-      // 在 el-calendar 渲染完成后执行
-      const calendarInstance = this.$refs.calendar
-      console.log('日历渲染完成')
-      const dateCells = this.$el.querySelectorAll('.date-cell')
-      console.log(dateCells)
-      dateCells.forEach((cell) => {
-        const date = cell.date //直接访问date数据
-        console.log('date:', date)
-      })
-      const cells = calendarInstance.$el.querySelectorAll('.el-calendar-table td')
-      cells.forEach((cell) => {
-        cell.addEventListener('click', () => {
-          this.handleCellClick(cell)
-        })
-      })
-    },
-    handleCellClick(cell) {
-      // 处理格子项的点击事件
-      console.log('点击的格子项:', cell)
-      console.log('是否有日历信息:', cell.querySelector('span') != null)
-      console.log('当前日期信息:', this.selectedDate)
-      let hasSchedule = cell.querySelector('span') != null
-      // 获取data-day属性的值
-      const parentComponent = cell.__vueParentComponent
-      console.log(
-        'parentComponent:',
-        parentComponent,
-        ' ',
-        parentComponent.$slots,
-        ' ',
-        parentComponent.$slots
-      )
-      if (parentComponent && parentComponent.$slots && parentComponent.$slots['date-cell']) {
-        const slotContent = parentComponent.$slots['date-cell']
-        // 在这里可以访问 date-cell 插槽内容
-        console.log('date-cell 插槽内容:', slotContent)
-      }
-      if (hasSchedule) {
-        this.popoverSecheduleVisible = true
-      } else {
-        this.centerDialogVisible = true
-      }
-    },
-    saveSchedule() {
-      // 在这里执行保存日程的逻辑
-      console.log('保存日程')
-      console.log('日期:', this.selectedDate)
-      console.log('时间:', this.selectedTime)
-      console.log('标题:', this.title)
-      this.centerDialogVisible = false
+<script setup lang="ts">
+import { ElCalendar } from "element-plus";
+import { ref } from "vue";
+import { ElMessageBox } from "element-plus";
+// task : 开始时间和结束时间(年月日时分)，任务名称，任务描述，任务id
+//class
+class Task {
+  constructor(
+    public taskId: number,
+    public startTime: string,
+    public endTime: string,
+    public taskName: string,
+    public taskDescription: string
+  ) {}
+}
+//taskList，先自己初始化一些数据
+const taskList = ref<Task[]>([]);
+taskList.value.push(
+  new Task(
+    1,
+    "2023-12-01 10:00",
+    "2023-12-01 11:00",
+    "任务1的名称",
+    "任务1的描述"
+  )
+);
+taskList.value.push(
+  new Task(
+    2,
+    "2024-01-02 00:00",
+    "2024-01-02 10:00",
+    "任务2的名称",
+    "任务2的描述"
+  )
+);
+taskList.value.push(
+  new Task(
+    2,
+    "2024-01-02 20:00",
+    "2024-01-02 21:00",
+    "任务3的名称",
+    "任务3的描述"
+  )
+);
+//dealMyDate函数,输入年月日，返回taskList中的任务名称
+const dealMyDate = (date: any) => {
+  let year = date.split("-")[0];
+  let month = date.split("-")[1];
+  let day = date.split("-")[2];
+  //返回的是一个数组
+  let result: Task[] = [];
+  for (let i = 0; i < taskList.value.length; i++) {
+    let task = taskList.value[i];
+    let taskYear = task.startTime.split(" ")[0].split("-")[0];
+    let taskMonth = task.startTime.split(" ")[0].split("-")[1];
+    let taskDay = task.startTime.split(" ")[0].split("-")[2];
+    if (taskYear === year && taskMonth === month && taskDay === day) {
+      result.push(task);
     }
   }
-}
+  return result;
+};
+//展示任务详情
+const showTaskDetail = (task: Task) => {
+  console.log(task);
+  //使用element-plus的弹窗组件
+  ElMessageBox({
+    title: "任务详情",
+    message: task.taskDescription,
+    showCancelButton: true,
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    beforeClose: (action, instance, done) => {
+      if (action === "confirm") {
+        done();
+      } else {
+        done();
+      }
+    },
+  });
+};
+
 </script>
 
+<template>
+  <el-calendar >
+    <template #date-cell="{ data }" >
+      
+      <p :class="data.isSelected ? 'is-selected' : ''">
+        {{ data.day.split('-').slice(1).join('-') }}
+        {{ data.isSelected ? '✔️' : '' }}
+      </p>
+
+        <div class="task-list-container"  style="gap: 5px;">
+          <el-button
+            v-for="task in dealMyDate(data.day)"
+            :key="task.taskId"
+            @click="showTaskDetail(task)"
+            
+          >
+            {{ task.taskName }}
+          </el-button>
+        </div>
+
+    </template>
+  </el-calendar>
+</template>
+
 <style>
-.remark-text {
-  font-size: 8px;
+.is-selected {
+  color: #1989fa;
 }
-.calendar-item {
-  flex-direction: column;
+.task-list-container {
+  max-height: 30px; /* 调整为适当的高度，超过此高度将显示滚动条 */
+  overflow-y: auto;
 }
-.calendar-time {
-  height: 16px;
-  line-height: 16px;
-}
+
 </style>

@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { ElCalendar } from 'element-plus'
-import { ref } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { ElButton } from 'element-plus'
 import { ElRadio } from 'element-plus'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
-import { watch } from 'vue'
+
+
+onMounted(() => {
+  getMeetingList()
+})
+
 const store = useStore()
 const currentProjectId = ref(store.state.currentProjectId)
 const userId = ref(store.state.currentUser.id)
@@ -20,7 +25,6 @@ const startTime = ref('')
 const endTime = ref('')
 const title = ref('')
 const description = ref('')
-const selectedTime = ref('')
 const priority = ref(0)
 // //taskList，先自己初始化一些数据
 class Task {
@@ -338,13 +342,6 @@ const handleRadioChange = (value:any) => {
     };
 
 
-
-
-
-
-const test = () => {
-  getTaskList()
-}
 </script>
 
 <template>

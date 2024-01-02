@@ -1,52 +1,64 @@
-<template>
-  <el-button type="primary" @click="dialogVisible = true">Invite New Member</el-button>
-  <el-dialog
-    :model-value="dialogVisible"
-    title="Enter Email"
-    @update:model-value="dialogVisible = $event"
-  >
-    <el-input v-model="email" type="email" placeholder="Enter member's email"></el-input>
-    <template #footer>
-      <el-button @click="dialogVisible = false">Cancel</el-button>
-      <el-button type="primary" @click="confirmEmail">Confirm</el-button>
-    </template>
-  </el-dialog>
-</template>
-
 <script setup lang="ts">
 import { ElCalendar } from 'element-plus'
 import { ref } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import axios from 'axios'
+import { ElButton } from 'element-plus'
+import { ElRadio } from 'element-plus'
+import { useStore } from 'vuex'
+import { ElMessage } from 'element-plus'
+import { watch } from 'vue'
+const store = useStore()
+const currentProjectId = ref(store.state.currentProjectId)
+const userId = ref(store.state.currentUser.id)
 // task : 开始时间和结束时间(年月日时分)，任务名称，任务描述，任务id
-//class
+// class
+
+const radio = ref('meeting')
+const centerDialogVisible = ref(false)
+const startTime = ref('')
+const endTime = ref('')
+const title = ref('')
+const description = ref('')
+const selectedTime = ref('')
+const priority = ref(0)
+// //taskList，先自己初始化一些数据
 class Task {
   constructor(
     public taskId: number,
-    public startTime: string,
-    public endTime: string,
-    public taskName: string,
-    public taskDescription: string
+    public startTime: string = "",
+    public endTime: string = "",
+    public taskName: string = "",
+    public taskDescription: string = "",
+    public status: number = 0
   ) {}
 }
-const radio = ref('meeting')
-const centerDialogVisible = ref(false)
-const selectedDate = ref('')
-const title = ref('')
-const details = ref('')
-const selectedTime = ref('')
 
-//taskList，先自己初始化一些数据
+const formatDateTime = (dateTimeString: string) => {
+  //将2021-12-01T10:00Z转化为2021-12-01 10:00
+  const date = new Date(dateTimeString);
+  
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Months are 0-based
+  const day = date.getDate().toString().padStart(2, '0');
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  
+  const formattedDateTime = `${year}-${month}-${day} ${hours}:${minutes}`;
+  return formattedDateTime;
+}
+
 const taskList = ref<Task[]>([])
-taskList.value.push(
-  new Task(1, '2023-12-01 10:00', '2023-12-01 11:00', '任务1的名称', '任务1的描述')
-)
-taskList.value.push(
-  new Task(2, '2024-01-02 00:00', '2024-01-02 10:00', '任务2的名称', '任务2的描述')
-)
-taskList.value.push(
-  new Task(2, '2024-01-02 20:00', '2024-01-02 21:00', '任务3的名称', '任务3的描述')
-)
+// taskList.value.push(
+//   new Task(1, '2023-12-01 10:00', '2023-12-01 11:00', '任务1的名称', '任务1的描述')
+// )
+// taskList.value.push(
+//   new Task(2, '2024-01-02 00:00', '2024-01-02 10:00', '任务2的名称', '任务2的描述')
+// )
+// taskList.value.push(
+//   new Task(2, '2024-01-02 20:00', '2024-01-02 21:00', '任务3的名称', '任务3的描述')
+// )
 //dealMyDate函数,输入年月日，返回taskList中的任务名称
 const dealMyDate = (date: any) => {
   let year = date.split('-')[0]
@@ -56,9 +68,9 @@ const dealMyDate = (date: any) => {
   let result: Task[] = []
   for (let i = 0; i < taskList.value.length; i++) {
     let task = taskList.value[i]
-    let taskYear = task.startTime.split(' ')[0].split('-')[0]
-    let taskMonth = task.startTime.split(' ')[0].split('-')[1]
-    let taskDay = task.startTime.split(' ')[0].split('-')[2]
+    let taskYear = task.endTime.split(' ')[0].split('-')[0]
+    let taskMonth = task.endTime.split(' ')[0].split('-')[1]
+    let taskDay = task.endTime.split(' ')[0].split('-')[2]
     if (taskYear === year && taskMonth === month && taskDay === day) {
       result.push(task)
     }
@@ -70,7 +82,7 @@ const showTaskDetail = (task: Task) => {
   console.log(task)
   //使用element-plus的弹窗组件
   ElMessageBox({
-    title: '任务详情',
+    title: '详情',
     message: task.taskDescription,
     showCancelButton: true,
     confirmButtonText: '确定',
@@ -84,19 +96,254 @@ const showTaskDetail = (task: Task) => {
     }
   })
 }
+  //使用userId获取当前用户的任务列表
 
-const saveSchedule = () => {
-  console.log('saveSchedule')
-  console.log(selectedDate.value)
-  console.log(selectedTime.value)
-  console.log(title.value)
-  console.log(details.value)
-  centerDialogVisible.value = false
+const getTaskList = () => {
+  axios({
+    method: 'get',
+    url: '/api/task/list-by-member',
+    params: {
+      userId: userId.value,
+    }
+  })
+    .then((r) => {
+      if (r.status === 200 && r.data.code === 200) {
+        ElMessage({
+          message: '任务列表获取成功',
+        })
+        console.log('获取到的任务列表长度', r.data.taskData.length)
+        //清空taskList
+        taskList.value = []
+        for (let i = 0; i < r.data.taskData.length; i++) {
+          let task = r.data.taskData[i]
+          taskList.value.push(
+            new Task(
+              task.taskId,
+              "",
+              formatDateTime(task.deadline),
+              task.name,
+              task.description,
+              task.status
+            )
+          )
+        }
+      } else {
+        ElMessage({
+          message: `任务列表获取失败,${r.data.message}`,
+          type: 'error'
+        })
+      }
+    })
+    .catch((error) => {
+      // 输出错误信息
+      console.error('Axios Error:', error);
+  }
+  )
 }
+
+//创建日程
+// /api/schedule/create
+// startTime deadline description title priority
+const createSchedule = () => {
+  //进行判断
+  if (startTime.value === '' || endTime.value === '' || title.value === '' || description.value === '') {
+    ElMessage({
+      message: '请填写完整信息',
+      type: 'error'
+    })
+    return
+  }
+  else if (startTime.value > endTime.value) {
+    ElMessage({
+      message: '开始时间不能晚于结束时间',
+      type: 'error'
+    })
+    return
+  }
+
+  axios({
+    method: 'post',
+    url: '/api/schedule/create',
+    params: {
+      startTime: startTime.value,
+      deadline: endTime.value,
+      description: description.value,
+      title: title.value,
+      priority: priority.value,
+    }
+  })
+    .then((r) => {
+      if (r.status === 200 && r.data.code === 200) {
+        ElMessage({
+          message: '日程创建成功',
+        })
+        console.log('创建的日程',r.data.data)
+      } else {
+        ElMessage({
+          message: `日程创建失败,${r.data.message}`,
+          type: 'error'
+        })
+      }
+    })
+    .catch((error) => {
+      // 输出错误信息
+      console.error('Axios Error:', error);
+  }
+  )
+}
+
+// 获取日程列表
+// /api/schedule/get
+// no params
+//{
+//   "code": 0,
+//   "message": "string",
+//   "events": [
+//     {
+//       "title": "string",
+//       "description": "string",
+//       "startTime": "2024-01-02T16:00:52.532Z",
+//       "deadline": "2024-01-02T16:00:52.532Z",
+//       "priority": 0
+//     }
+//   ]
+// }
+const getSchedule = () => {
+  axios({
+    method: 'get',
+    url: '/api/schedule/get',
+  })
+    .then((r) => {
+      if (r.status === 200 && r.data.code === 200) {
+        ElMessage({
+          message: '日程列表获取成功',
+        })
+        console.log('获取到的日程列表长度', r.data.events.length)
+        //清空taskList
+        taskList.value = []
+        for (let i = 0; i < r.data.events.length; i++) {
+          let task = r.data.events[i]
+          taskList.value.push(
+            new Task(
+              0,
+              formatDateTime(task.startTime),
+              formatDateTime(task.deadline),
+              task.title,
+              task.description,
+              task.priority
+            )
+          )
+        }
+      } else {
+        ElMessage({
+          message: `日程列表获取失败,${r.data.message}`,
+          type: 'error'
+        })
+      }
+    })
+    .catch((error) => {
+      // 输出错误信息
+      console.error('Axios Error:', error);
+  }
+  )
+}
+// 获取会议列表
+// /api/meeting/user/{userId}
+// userId
+// {
+//   "code": 0,
+//   "message": "string",
+//   "meetings": [
+//     {
+//       "id": "string",
+//       "projectId": 0,
+//       "title": "string",
+//       "description": "string",
+//       "startTime": "2024-01-02T16:44:41.473Z",
+//       "duration": 0,
+//       "url": "string",
+//       "bookId": "string"
+//     }
+//   ]
+// }
+const getMeetingList = () => {
+  axios({
+    method: 'get',
+    url: '/api/meeting/user/' + userId.value,
+  })
+    .then((r) => {
+      if (r.status === 200 && r.data.code === 200) {
+        ElMessage({
+          message: '会议列表获取成功',
+        })
+        console.log('获取到的会议列表长度', r.data.meetings.length)
+        //清空taskList
+        taskList.value = []
+        for (let i = 0; i < r.data.meetings.length; i++) {
+          let task = r.data.meetings[i]
+
+
+          // 计算结束时间
+          const endTime = task.startTime.getTime() + task.duration * 60000;
+
+          // 将 endTime 转换为字符串形式
+          const endTimeString = endTime.toISOString();
+          taskList.value.push(
+            new Task(
+              task.id,
+              formatDateTime(task.startTime),
+              formatDateTime(endTimeString),
+              task.title,
+              task.description,
+              0
+            )
+          )
+        }
+      } else {
+        ElMessage({
+          message: `会议列表获取失败,${r.data.message}`,
+          type: 'error'
+        })
+      }
+    })
+    .catch((error) => {
+      // 输出错误信息
+      console.error('Axios Error:', error);
+  }
+  )
+}
+
+// 监听radio的变化，根据radio的值来决定显示的是会议还是日程还是任务
+watch(radio, (newValue, oldValue) => {
+      // newValue 是新的值，oldValue 是变化前的值
+      handleRadioChange(newValue);
+    });
+
+    // 处理 radio 变化的函数
+const handleRadioChange = (value:any) => {
+      switch (value) {
+        case 'meeting':
+          getMeetingList();
+          break;
+        case 'schedule':
+          getSchedule();
+          break;
+        case 'task':
+          getTaskList();
+          break;
+        default:
+          // 默认的逻辑，你可以根据实际情况添加
+          break;
+      }
+    };
+
+
+
+
+
+
 const test = () => {
-  console.log('test')
-  //输出radio的值
-  console.log(radio.value)
+  getTaskList()
 }
 </script>
 
@@ -104,7 +351,7 @@ const test = () => {
   <div class="container">
     <el-calendar>
       <template #date-cell="{ data }">
-        <div @click=";(centerDialogVisible = true), (selectedDate = data.day), (selectedTime = '')">
+        <div @click=";(centerDialogVisible = true)">
           <p :class="data.isSelected ? 'is-selected' : ''">
             {{ data.day.split('-').slice(1).join('-') }}
             {{ data.isSelected ? '✔️' : '' }}
@@ -127,36 +374,52 @@ const test = () => {
       <el-radio label="schedule">日程</el-radio>
       <el-radio label="task">任务</el-radio>
     </el-radio-group>
-    <el-button @click="test">test</el-button>
+
   </div>
 
-  <el-dialog v-model="centerDialogVisible" title="设置日程" width="30%" center>
+  <el-dialog v-model="centerDialogVisible" title="设置日程" width="40%" center>
     <el-form>
-      <el-form-item label="日期">
+      <el-form-item label="开始时间">
         <el-date-picker
-          v-model="selectedDate"
-          type="date"
-          :placeholder="selectedDate"
+          v-model="startTime"
+          type="datetime"
+          placeholder="Select date and time"
+          value-format="YYYY-MM-DDTHH:mm"
         ></el-date-picker>
       </el-form-item>
 
-      <el-form-item label="时间">
-        <el-time-picker v-model="selectedTime" placeholder="请选择时间"></el-time-picker>
+      <el-form-item label="结束时间">
+        <el-date-picker
+          v-model="endTime"
+          type="datetime"
+          placeholder="Select date and time"
+          value-format="YYYY-MM-DDTHH:mm"
+        ></el-date-picker>
       </el-form-item>
 
       <el-form-item label="标题">
         <el-input v-model="title" placeholder="请输入标题"></el-input>
       </el-form-item>
 
-      <el-form-item label="详情">
-        <el-input v-model="details" placeholder="请输入详情" clearable></el-input>
+      <el-form-item label="描述">
+        <el-input v-model="description" placeholder="请输入详情" clearable></el-input>
       </el-form-item>
-    </el-form>
 
+      <!-- 优先级 -->
+        <el-form-item label="优先级">
+          <el-radio-group v-model="priority" class="radio-group">
+            <el-radio :label="0">普通</el-radio>
+            <el-radio :label="1">重要</el-radio>
+            <el-radio :label="2">紧急</el-radio>
+            <el-radio :label="3">重要且紧急</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+      </el-form>
     <template #footer>
       <span class="dialog-footer">
         <el-button @click="centerDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveSchedule">保存</el-button>
+        <el-button type="primary" @click="createSchedule">保存</el-button>
       </span>
     </template>
   </el-dialog>

@@ -2,6 +2,7 @@
 import { ElCalendar } from "element-plus";
 import { ref } from "vue";
 import { ElMessageBox } from "element-plus";
+import axios from "axios";
 // task : 开始时间和结束时间(年月日时分)，任务名称，任务描述，任务id
 //class
 class Task {
@@ -13,6 +14,13 @@ class Task {
     public taskDescription: string
   ) {}
 }
+const radio = ref("meeting");
+const centerDialogVisible = ref(false);
+const selectedDate = ref("");
+const title = ref("");
+const details = ref("");
+const selectedTime = ref("");
+
 //taskList，先自己初始化一些数据
 const taskList = ref<Task[]>([]);
 taskList.value.push(
@@ -80,30 +88,87 @@ const showTaskDetail = (task: Task) => {
   });
 };
 
+const saveSchedule = () => {
+  console.log("saveSchedule");
+  console.log(selectedDate.value);
+  console.log(selectedTime.value);
+  console.log(title.value);
+  console.log(details.value);
+  centerDialogVisible.value = false;
+};
+const test = () => {
+  console.log("test");
+  //输出radio的值
+  console.log(radio.value);
+};
+
+
+
 </script>
 
 <template>
-  <el-calendar >
-    <template #date-cell="{ data }" >
-      
-      <p :class="data.isSelected ? 'is-selected' : ''">
-        {{ data.day.split('-').slice(1).join('-') }}
-        {{ data.isSelected ? '✔️' : '' }}
-      </p>
-
-        <div class="task-list-container"  style="gap: 5px;">
-          <el-button
-            v-for="task in dealMyDate(data.day)"
-            :key="task.taskId"
-            @click="showTaskDetail(task)"
-            
-          >
-            {{ task.taskName }}
-          </el-button>
-        </div>
+  <div class="container">
+  <el-calendar  >
+    <template #date-cell="{ data }"  >
+      <div @click="centerDialogVisible = true, selectedDate = data.day,selectedTime= ''">
+        <p :class="data.isSelected ? 'is-selected' : ''">
+          {{ data.day.split('-').slice(1).join('-') }}
+          {{ data.isSelected ? '✔️' : '' }}
+        </p>
+      </div>
+      <div class="task-list-container"  style="gap: 5px;"  >
+        <el-button
+          v-for="task in dealMyDate(data.day)"
+          :key="task.taskId"
+          @click="showTaskDetail(task)"
+        >
+          {{ task.taskName }}
+        </el-button>
+      </div>
 
     </template>
   </el-calendar>
+
+
+    <el-radio-group v-model="radio" class="radio-group">
+      <el-radio label="meeting">会议</el-radio>
+      <el-radio label="schedule">日程</el-radio>
+      <el-radio label="task">任务</el-radio>
+    </el-radio-group>
+    <el-button @click="test">test</el-button>
+  </div>
+
+  <el-dialog v-model="centerDialogVisible" title="设置日程" width="30%" center>
+    <el-form>
+      <el-form-item label="日期">
+        <el-date-picker
+          v-model="selectedDate"
+          type="date"
+          :placeholder="selectedDate"
+        ></el-date-picker>
+      </el-form-item>
+
+      <el-form-item label="时间">
+        <el-time-picker v-model="selectedTime" placeholder="请选择时间"></el-time-picker>
+      </el-form-item>
+
+      <el-form-item label="标题">
+        <el-input v-model="title" placeholder="请输入标题"></el-input>
+      </el-form-item>
+      
+      <el-form-item label="详情">
+        <el-input v-model="details" placeholder="请输入详情" clearable></el-input>
+      </el-form-item>
+    </el-form>
+
+    <template #footer>
+      <span class="dialog-footer">
+        <el-button @click="centerDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveSchedule">保存</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
 </template>
 
 <style>
@@ -113,6 +178,19 @@ const showTaskDetail = (task: Task) => {
 .task-list-container {
   max-height: 30px; /* 调整为适当的高度，超过此高度将显示滚动条 */
   overflow-y: auto;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+
+  /*宽度铺满 */
+  width: 100%;
+}
+
+.radio-group {
+  margin-top: 10px; /* Adjust the margin as needed */
+    justify-content: flex-end; /* Align children to the end (right) of the container */
 }
 
 </style>

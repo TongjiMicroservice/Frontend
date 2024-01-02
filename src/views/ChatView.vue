@@ -83,7 +83,7 @@ export default {
         // 可以根据需要添加更多选项
       ],
       currentChatHistory: [],
-      userId: 'A', // 假设的当前用户ID
+      userId: '7', // 假设的当前用户ID
       ids: [...Array(26)].map((_, i) => String.fromCharCode(65 + i)), // 生成从 A 到 Z 的 ID 数组
       selectedId: 'Z',
       socket: null,
@@ -180,7 +180,8 @@ export default {
       this.showEmojis = false;
     },
     initializeChat() {
-      this.socket = io('http://localhost:9092');
+        console.log("正在链接ws");
+      this.socket = io('http://localhost:9092'+'?id=7');
       // this.socket.emit('Authorize', this.userId);
       this.socket.on('messageEvent', (data) => {
         console.log('Message from server:', data);
@@ -192,7 +193,8 @@ export default {
           this.loadChatHistory(senderId);
         }
       });
-      this.socket.on('readStatusUpdated', (updatedSender) => {
+      //收到消息已读的通知
+      this.socket.on('acknowledgeResponse', (updatedSender) => {
         console.log('Read status updated for messages from:', updatedSender);
 
         // 如果当前选中的聊天对象是更新消息的发送者，重新加载聊天记录
@@ -200,14 +202,15 @@ export default {
           this.loadChatHistory(updatedSender);
         }
       });
-      this.socket.emit('requestRecentChats', this.userId);
-
+      //this.socket.emit('requestRecentChats', this.userId);
+      //收到最近聊天列表的通知
       this.socket.on('recentChatResponse', (data) => {
+          console.log('Recent chats:', data);
         this.identityOptions = data.map(item => {
           return { name: item.contactId, contactId: item.contactId };
         });
       });
-
+      //收到聊天记录的通知
       this.socket.on('chatHistoryResponse', (data) => {
         this.currentChatHistory = data.map(msg => {
           return {
@@ -218,11 +221,21 @@ export default {
           };
         });
       });
+      //收到有人上线的通知
+      this.socket.on('loginResponse', (data) => {
+        //data:字符串id
+      });
+      //收到有人下线的通知
+      this.socket.on('logoutResponse', (data) => {
+        //data:字符串id
+      });
+      console.log('Socket connection established.');
     }
   },
   watch: {
     userId(newUserId, oldUserId) {
       if (newUserId !== oldUserId) {
+          console.log("User ID changed from", oldUserId, "to", newUserId);
         this.initializeChat();
       }
     }

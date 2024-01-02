@@ -58,7 +58,7 @@ const createProject=(name:string,description:string,scale:number)=>{
     <div class="h-full">
         <div class="font-bold text-3xl mt-5 ml-3">TeamSphere</div>
         <div class="flex flex-col justify-center items-center" style="height: 70%;">
-            <div class="font-bold text-center text-3xl mb-5">您还没有项目,请选择创建项目或加入项目</div>
+            <div class="font-bold text-center text-3xl mb-5">请选择创建项目或加入项目</div>
             <div class="flex justify-center items-center">
                 <el-button @click="createProjectVisible=true" class="mx-2">创建项目</el-button>
                 <el-dialog v-model="createProjectVisible">

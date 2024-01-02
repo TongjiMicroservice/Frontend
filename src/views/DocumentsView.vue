@@ -1,5 +1,6 @@
 <template>
   <el-container>
+
     <el-header style="text-align: right; padding: 0 20px;">
 
       <div class="header-content">
@@ -13,13 +14,12 @@
 
       </div>
     </el-header>
-
     <el-main>
       <div class="upload-container">
         <el-upload
             class="upload-demo "
             drag
-            action="http://localhost:8090/api/file?userId=7&projectId=10"
+            :action="'http://localhost:8090/api/file?userId=' + userId + '&projectId=' + projectId"
 
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
@@ -36,23 +36,29 @@
           </template>
         </el-upload>
       </div>
-      <el-table :data="filteredFiles" style="width: 100%;" stripe>
-        <el-table-column type="index" label="#" width="80"/>
-        <el-table-column label="文件" width="180">
+      <el-table :data="filteredFiles" class="my-custom-table" style="width: 100%" >
+        <el-table-column type="index" label="#" width="60"/>
+        <el-table-column label="文件类型" width="80">
           <template #default="{ row }">
             <component
                 :is="getIconComponent(row.type)"
                 class="file-icon"
                 style="margin-right: 5px; font-size: 20px;"
             ></component>
-            {{ row.name }}
           </template>
-
         </el-table-column>
-        <el-table-column  width="280"/>
-        <el-table-column prop="date" label="修改日期" width="280"/>
+        <el-table-column   width="40"/>
+        <el-table-column prop="name" label="文件名" width="140">
+        <template #default="{ row}">
+        {{ row.name }}
+        </template>
+        </el-table-column>
+        <el-table-column prop="size" label="文件大小（KB）" width="140"/>
+        <el-table-column prop="uploadTime" label="修改日期" width="240"/>
+        <el-table-column prop="userId" label="上传者" width="100"/>
         <el-table-column label="操作" width="480">
           <template #default="{ row }">
+
             <el-button type="text" icon="Download" @click="downloadFile(row)">下载</el-button>
             <el-button type="text" icon="Delete" @click="deleteFile(row)">删除</el-button>
           </template>
@@ -65,12 +71,22 @@
 <script lang="ts">
 import { onMounted,defineComponent, reactive, Ref,computed,ref } from 'vue';
 import 'element-plus/dist/index.css';
-import { Document, Delete, Download, FolderOpened ,Tickets} from '@element-plus/icons-vue';
+import { Document, Delete, Download, FolderOpened ,Tickets,Picture,VideoPlay,Message } from '@element-plus/icons-vue';
 import { UploadFilled } from '@element-plus/icons-vue'
 import { useStore } from 'vuex';
+import axios from 'axios';
 import Project from "@/models/Project";
 
 
+interface File {
+  userId:number;
+  url: string;
+  type: string;
+  name: string;
+  size: number;
+  uploadTime: string;
+  projectId:number;
+}
 // const store = useStore();
 //
 // const userId = computed(() => store.state.currentUser.id);
@@ -86,18 +102,58 @@ export default defineComponent({
   },
   setup() {
     const searchQuery: Ref<string> = ref('');
-
+    // const files = ref<File[]>([]);
+    const fileschange = ref<File[]>([]);
     const files = reactive([
-      { name: 'Redis学习笔记.pdf', date: '2023-11-23 16:43', type: 'pdf' },
-      { name: 'nginx学习笔记.txt', date: '2023-11-19 20:17', type: 'txt' },
+      { userId:1, projectId:2,url:'aaa',  type: 'pdf' , name: 'Redis学习笔记.pdf', size: 500,uploadTime: '2023-11-23 16:43', },
+      { userId:2, projectId:2,url:'bbb', type: 'txt' , name: 'nginx学习笔记.txt',  size: 600,uploadTime: '2023-11-19 20:17', },
       // 更多文件数据
     ]);
 
-    // const store = useStore();
-    // const projectId = computed(() => store.state.projects);
-    // const userId = computed(() => store.state.currentUser.id);
-    // console.log(userId.value)
-    // console.log(projectId.value[0].id)
+    const store=useStore();
+    const userId = computed(() => store.state.currentUser.id);
+    const projectId=computed(() => store.state.currentProjectId);
+    console.log(userId.value)
+    console.log(projectId.value)
+    onMounted(async () => {
+       fetchFilesByProject(); // 确保在这里传递正确的项目ID
+    });
+    async function fetchFilesByProject() {
+      try {
+        const response = await axios.get(`/api/file-by-project?projectId=${projectId.value}`, {
+          headers: { 'accept': 'application/json' }
+        });
+        if (response.data.code === 200 && response.data.list) {
+
+          // console.log(response.data.list)
+          fileschange.value = response.data.list.map((file): File => {
+            return {
+              userId: file.userId,
+              url: file.url,
+              type: file.type || 'unknown', // assuming that type is optional and might not be present
+              name: file.name,
+              size: file.size,
+              uploadTime: file.uploadTime,
+              projectId: file.projectId
+            };
+          });
+          console.log(fileschange.value)
+          updateFiles()
+          console.log(files)
+        }
+      } catch (error) {
+        console.error('Failed to retrieve files information', error);
+      }
+    }
+    function updateFiles() {
+      // 清空当前 files 数组
+      files.splice(0, files.length);
+
+      // 将 fileschange.value 中的每个文件对象添加到 files 数组中
+      fileschange.value.forEach(file => {
+        files.push(file);
+      });
+    }
 
 
 
@@ -106,13 +162,18 @@ export default defineComponent({
         return files;
       }
       return files.filter(file => file.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
+      console.log(filteredFiles.value)
     });
 
     const getIconComponent = (type: string) => {
-      const typeToIconComponentMap: Record<string, typeof Document | typeof FolderOpened|typeof Tickets> = {
-        pdf: Document,
+      const typeToIconComponentMap: Record<string, typeof Document | typeof FolderOpened|typeof Tickets|typeof Picture| typeof VideoPlay |typeof Message> = {
+        pdf: Message,
         txt: Tickets,
         doc: FolderOpened,
+        jpg: Picture,
+        png: Picture,
+        mp4:VideoPlay ,
+
         // 更多类型的图标组件
       };
       return typeToIconComponentMap[type] || Document;
@@ -121,14 +182,77 @@ export default defineComponent({
     const downloadFile = (file: any): void => {
       // 实现文件下载逻辑
       console.log('Downloading', file);
+      window.open(file.url);
     };
 
     const deleteFile = (file: any): void => {
       // 实现文件删除逻辑
-      console.log('Deleting', file);
+      console.log('Deleting', file.name);
+      // const encodedFileName = encodeURIComponent(file.name);
+      // const url = `http://localhost:8090/api/file?fileName=${encodedFileName}`;
+      //
+      // fetch(url, {
+      //   method: 'DELETE',
+      //   headers: {
+      //     'Accept': 'application/json'
+      //   }
+      // })
+      //     .then(response => {
+      //       if (!response.ok) {
+      //         // 抛出错误让catch块可以捕获
+      //         throw new Error('Network response was not ok');
+      //       }
+      //       return response.json();
+      //     })
+      //     .then(data => {
+      //       // 这里处理从服务器接收到的数据
+      //       if (data.code === 200) {
+      //         console.log('成功删除:', data);
+      //         fetchFilesByProject();
+      //       } else {
+      //         console.warn('删除失败:', data);
+      //       }
+      //     })
+      //     .catch(error => {
+      //       // 这里处理错误情况
+      //       console.error('Error during file deletion:', error);
+      //     });
+      const encodedFileName = encodeURIComponent(file.name);
+      const url = `/api/file?fileName=${encodedFileName}`;
+
+      axios.delete(url, {
+        headers: {
+          'Accept': 'application/json'
+        }
+      })
+          .then(response => {
+            const data = response.data;
+            // 这里处理从服务器接收到的数据
+            if (data.code === 200) {
+              console.log('成功删除:', data);
+              fetchFilesByProject(); // 调用fetchFilesByProject函数
+            } else {
+              console.warn('删除失败:', data);
+            }
+          })
+          .catch(error => {
+            // 这里处理错误情况
+            if (error.response) {
+              // 服务器响应了请求但状态码不在2xx的范围内
+              console.error('删除失败，状态码:', error.response.status);
+              console.error('失败响应:', error.response.data);
+            } else if (error.request) {
+              // 请求已经发出，但是没有收到响应
+              console.error('没有响应:', error.request);
+            } else {
+              // 在设置请求的时候触发了某些问题
+              console.error('请求错误:', error.message);
+            }
+          });
     };
     const handleUploadSuccess = (response: any, file: any, fileList: any) => {
       console.log("Upload Successful:", response, file, fileList);
+      fetchFilesByProject(); // 调用fetchFilesByProject函数
       // 这里可以添加逻辑来处理上传成功
     };
 
@@ -136,35 +260,11 @@ export default defineComponent({
       console.error("Upload Error:", err, file, fileList);
       // 这里可以添加逻辑来处理上传错误
     };
-    // onMounted(async () => {
-    //   try {
-    //     // 发送 GET 请求到你的后端接口
-    //     const response = await fetch('http://localhost:8090/api/file-by-project?projectId=10');
-    //     if (response.ok) {
-    //       const data = await response.json();
-    //       if (data.code === 200 && data.list) {
-    //         // 使用从后端获取的数据覆盖前端的数据
-    //         files.splice(0, files.length, ...data.list.map(item => ({
-    //           name: item.name + '.' + item.type, // 添加文件扩展名
-    //           date: item.uploadTime,
-    //           type: item.type,
-    //           url: item.url,
-    //           userId: item.userId,
-    //           projectId: item.projectId,
-    //           size: item.size
-    //         })));
-    //       } else {
-    //         console.error('获取数据失败:', data.message);
-    //       }
-    //     } else {
-    //       console.error('HTTP 请求错误:', response.status);
-    //     }
-    //   } catch (error) {
-    //     console.error('请求发生错误:', error);
-    //   }
-    // }
-    // );
     return {
+      userId,
+      projectId,
+      files,
+      fileschange,
       searchQuery,
       filteredFiles,
       getIconComponent,
@@ -172,6 +272,7 @@ export default defineComponent({
       deleteFile,
       handleUploadSuccess,
       handleUploadError,
+      updateFiles,
       // userId,
       // projectId,
     };
@@ -179,21 +280,18 @@ export default defineComponent({
 });
 </script>
 
-<style scoped>
-.black-background {
-  background-color: black;
-  color: white; /* 改变文本颜色以提高可读性 */
+<style >
+.my-custom-table :deep(.el-table__body-wrapper tbody tr) {
+  background-color: transparent !important;
 }
-
-.black-background .el-upload-dragger {
-  border-color: transparent; /* 可选：移除边框或设置为适合黑色背景的颜色 */
+.my-custom-table :deep(.el-table__header-wrapper thead th) {
+  background-color: rgba(78,68,247,0.2)!important; /* 半透明蓝色 */
 }
-.black-background .el-upload__text {
-  color: white; /* 确保上传区域文本是白色 */
+.my-custom-table:deep(.el-table__body-wrapper tbody tr:hover) {
+  background-color: rgba(183,203,240, 0.9) !important;
 }
-
-.black-background .el-upload__tip {
-  color: white; /* 确保提示文本是白色 */
+.el-table__body-wrapper > tbody > tr {
+  background-color: transparent !important;
 }
-
 </style>
+

@@ -7,10 +7,10 @@ import { useStore } from 'vuex';
 import { Plus } from '@element-plus/icons-vue';
 
 const store = useStore();
-const pageSize=ref(3);
+const pageSize=ref(8);
 const currentPage=ref(1);
 
-const currentTask=ref<Task>(new Task(-1,'','',-1,new Date,-1))
+const currentTask=ref<Task>(new Task(-1,'','',-1,new Date,-1,new Date(),'','','',1))
 const dialogVisible=ref(false)
 const currentTaskMembers=ref<{
   userId:number,
@@ -25,23 +25,12 @@ const currentProjectMembers=ref<{
   privilege:number
 }[]>([])
 
-const tasksDiv=ref<HTMLElement|null>(null)
+
 
 const taskList = ref<Task[]>([]);
 
-const finishedTaskList=computed(()=>taskList.value.filter((task)=>task.status===1))
+const filteredTaskList=ref<Task[]>([])
 
-const unfinishedTaskList=computed(()=>taskList.value.filter((task)=>task.status===0))
-
-const showTaskList=computed(()=>{
-  if(taskType.value==='all'){
-    return taskList.value
-  }else if(taskType.value==='finished'){
-    return finishedTaskList.value
-  }else{
-    return unfinishedTaskList.value
-  }
-})
 
 const start=computed(()=>(currentPage.value-1)*pageSize.value)
 
@@ -120,9 +109,10 @@ const getTaskList = ():Promise<Boolean> => {
     if (res.status === 200 && res.data.code === 200) {
       let data=res.data.taskData
       for(let i=0;i<res.data.taskData.length;i++){
-        let task:Task=new Task(data[i].taskId,data[i].name,data[i].description,data[i].leader,data[i].deadline,data[i].status)
+        let task:Task=new Task(data[i].id,data[i].name,data[i].description,data[i].leader,data[i].deadline,data[i].status,data[i].finishTime,data[i].file,data[i].leaderName,data[i].fileName,data[i].priority)
         taskList.value.push(task)
       }
+      filterTask(taskType.value)
       return true
     } else {
       ElMessage({
@@ -187,13 +177,11 @@ const showAddTaskMember=()=>{
     return member.userId!==store.state.currentUser.id
   })
 
-  console.log('shaizhjqian',waitToAddMembers.value)
 
   waitToAddMembers.value=waitToAddMembers.value.filter((member)=>{
     return !currentTaskMembers.value.some((m) => m.userId === member.userId)
   })
 
-  console.log('shaizhihou',waitToAddMembers.value)
 }
 
 const addTaskMember=(id:number)=>{
@@ -218,7 +206,29 @@ const removeTaskMember=(id:number)=>{
   toAddMembers.value=toAddMembers.value.filter((member)=>{
     return member.userId!==id
   })
-  
+}
+
+const deleteTask=(taskId:number)=>{
+  axios({
+    method:'delete',
+    url:'/api/task/delete',
+    params:{
+      taskId:taskId
+    }
+  }).then((r)=>{
+    if(r.status===200&&r.data.code===200){
+      ElMessage({
+        message: `删除任务成功`,
+        type: 'success',
+      });
+      getTaskList()
+    }else{
+      ElMessage({
+        message: `删除任务失败，${r.data.message}`,
+        type: 'error',
+      });
+    }
+  })
 }
 
 
@@ -268,7 +278,7 @@ const createTask=()=>{
       description:currentTask.value.description,
       deadline:currentTask.value.deadline,
       leader:store.state.currentUser.id,
-      priority:1
+      priority:currentTask.value.priority
     }
   }).then((res)=>{
     if(res.status===200&&res.data.code===200){
@@ -294,11 +304,32 @@ const getScreenSize=()=>{
   windowWidth.value=window.innerWidth
   windowHeight.value=window.innerHeight
 
-  pageSize.value=(Math.floor((windowWidth.value)*(0.6)/300))*(Math.floor(windowHeight.value/325))
+  // pageSize.value=(Math.floor((windowHeight.value-200)/70))
 }
 
 
 
+const filterTask=(type:string)=>{
+  if(type==='all'){
+    filteredTaskList.value=taskList.value
+  }else if(type==='outdate'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===0&&new Date(task.deadline)<new Date()
+    })
+  }else if(type==='unfinished'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===0&&new Date(task.deadline)>new Date()
+    })
+  }else if(type==='toreview'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===1&&new Date(task.deadline)>new Date()
+    })
+  }else if(type==='finished'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===2
+    })
+  }
+}
 
 onMounted(() => {
   getTaskList()
@@ -315,36 +346,51 @@ onMounted(() => {
 
 <template>
   <div class="h-full w-full">
-    <div class="w-full h-1/6 pt-10">
-      <el-radio-group v-model="view">
-        <el-radio-button label="task_overview">任务概览</el-radio-button>
-        <el-radio-button label="task_review">任务审批</el-radio-button>
-      </el-radio-group>
-    </div>
-    <div class="w-full p-2 flex justify-between" v-if="view==='task_overview'">
+    <div class="w-full p-2 pt-10 flex justify-between">
       <el-radio-group
         v-model="taskType"
         class="pl-1"
+        @change="filterTask(taskType)"
       >
         <el-radio label="all">全部</el-radio>
         <el-radio label="unfinished">未完成</el-radio>
+        <el-radio label="toreview">待审批</el-radio>
         <el-radio label="finished">已完成</el-radio>
+        <el-radio label="outdate">已过期</el-radio>
       </el-radio-group>
       <el-button class="mr-20" type="primary" @click="createTaskVisible=true">创建任务</el-button>
     </div>
-    <el-space wrap  v-if="view==='task_overview'" ref="tasksDiv">
-      <p v-if="taskList.length===0">项目还没有任务，请<span class="create-task" @click="createTaskVisible=true">创建</span>项目的第一个任务</p>
-      <div v-else v-for="(task,index) in showTaskList.slice(start,start+pageSize)" :key="index" class="w-1/3 p-3" @click="handleTaskOpen(task)">
-        <div class="task-card">
-          <div class="p-3 flex flex-col w-full">
-            <h1 class="text-xl font-bold py-1">{{ task.name }}</h1>
-            <p class="py-1">任务状态: <span v-if="task.status===0" >未完成</span><span v-if="task.status===1" >已完成</span></p>
-            <p class="py-1">任务内容: {{ task.description }}</p>
-            <p class="py-1">截止时间: {{ task.deadline }}</p>
-          </div>
-        </div>
-      </div>
-    </el-space>
+    <div class="w-full py-4 overflow-auto">
+      <el-table stripe :data="filteredTaskList.slice(start,start+pageSize)" class="w-full">
+        <el-table-column  fixed prop="name" label="名称"></el-table-column>
+        <el-table-column label="状态">
+          <template #default="scope">
+            <el-tag v-if="scope.row.status===0&&new Date(scope.row.deadline)<new Date()" type="warning">已过期</el-tag>
+            <el-tag v-else-if="scope.row.status===0&&new Date(scope.row.deadline)>new Date()" type="danger">未完成</el-tag>
+            <el-tag v-else-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()" type="primary">待审批</el-tag>
+            <el-tag v-else-if="scope.row.status===2" type="success">已完成</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column  label="截止时间">
+          <template #default="scope">
+            {{ new Date(scope.row.deadline).toDateString() }}
+          </template>
+        </el-table-column>
+        <el-table-column  prop="leaderName" label="负责人"></el-table-column>
+        <el-table-column  v-if="taskType==='toreview'||taskType==='finished'" prop="score" label="评分"></el-table-column>
+        <el-table-column  v-if="taskType==='toreview'||taskType==='finished'" prop="finishedTime" label="提交时间"></el-table-column>
+        <el-table-column fixed="right" label="操作">
+          <template #default="scope">
+            <el-button link size="small" @click="handleTaskOpen(scope.row)">
+              查看详情
+            </el-button>
+            <el-button link size="small" type="danger" @click="deleteTask(scope.row.taskId)">
+              删除任务
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
     <el-dialog
       v-model="createTaskVisible"
       title="创建任务"
@@ -365,6 +411,13 @@ onMounted(() => {
               placeholder="选择日期"
               value-format="YYYY-MM-DDTHH:mm"
             ></el-date-picker>
+          </el-form-item>
+          <el-form-item label="任务优先级">
+            <el-select v-model="currentTask.priority">
+              <el-option label="普通" value="1"></el-option>
+              <el-option label="紧急" value="2"></el-option>
+              <el-option label="非常紧急" value="3"></el-option>
+            </el-select>
           </el-form-item>
         </el-form>
       </div>
@@ -387,6 +440,9 @@ onMounted(() => {
         <p class="py-1">任务状态: {{ currentTask.status }}</p>
         <p class="py-1">任务内容: {{ currentTask.description }}</p>
         <p class="py-1">截止时间: {{ currentTask.deadline }}</p>
+        <p class="py-1">负责人: {{ currentTask.leaderName }}</p>
+        <p class="py-1">任务提交:{{ currentTask.finishedTime }}</p>
+        <p class="py-1">任务文件:{{ currentTask.file }}</p>
       </div>
       <h1 class="text-xl font-bold p-3">任务成员</h1>
       <el-space class="p-3">
@@ -422,8 +478,8 @@ onMounted(() => {
         </span>
       </template>
     </el-dialog>
-    <div class="py-3 flex justify-center items-center" v-if="view==='task_overview'">
-      <el-pagination layout="prev, pager, next" :total="showTaskList.length" background :page-size="pageSize" v-model:current-page="currentPage" />
+    <div class="py-3 flex justify-center items-center">
+      <el-pagination layout="prev, pager, next" :total="filteredTaskList.length" background :page-size="pageSize" v-model:current-page="currentPage" />
     </div>
   </div>
 </template>

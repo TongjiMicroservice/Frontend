@@ -1,130 +1,110 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import axios from 'axios'
 import {useStore} from 'vuex'
+import Task from '@/models/Task'
+import { ElMessage } from 'element-plus';
+import TaskCard from '@/components/TaskCard.vue'
 
 const store=useStore()
 
-const finishedTask=ref([{
-  title:'任务1',
-  content:'完成任务1的内容',
-  time:'2021-10-10',
-  status:'已完成'
-},{
-  title:'任务2',
-  content:'完成任务2的内容',
-  time:'2021-10-10',
-  status:'已完成'
-},{
-  title:'任务3',
-  content:'完成任务3的内容',
-  time:'2021-10-10',
-  status:'已完成'
-}])
+const pageSize=ref(3)
+const currentPage=ref(1)
+const start=computed(()=>(currentPage.value-1)*pageSize.value)
 
-const onDoingTask=ref([{
-  title:'任务1',
-  content:'完成任务1的内容',
-  time:'2021-10-10',
-  status:'已完成'
-},{
-  title:'任务2',
-  content:'完成任务2的内容',
-  time:'2021-10-10',
-  status:'已完成'
-},{
-  title:'任务3',
-  content:'完成任务3的内容',
-  time:'2021-10-10',
-  status:'已完成'
-}])
 
-const toDoTask=ref([{
-  title:'任务1',
-  content:'完成任务1的内容',
-  time:'2021-10-10',
-  status:'已完成'
-},{
-  title:'任务2',
-  content:'完成任务2的内容',
-  time:'2021-10-10',
-  status:'已完成'
-},{
-  title:'任务3',
-  content:'完成任务3的内容',
-  time:'2021-10-10',
-  status:'已完成'
-}])
+const taskList=ref<Task[]>([])
 
-const upcomingMeeting=ref([{
-  title:'会议1',
-  content:'会议1的内容',
-  time:'2021-10-10',
-},{
-  title:'会议2',
-  content:'会议2的内容',
-  time:'2021-10-10',
-},{
-  title:'会议3',
-  content:'会议3的内容',
-  time:'2021-10-10',
-}])
+const getTaskList=()=>{
+  axios({
+    method:'get',
+    url:'/api/task/list-by-member',
+    params:{
+      userId:store.state.currentUser.id
+    }
+  }).then((res)=>{
+    if (res.status===200&&res.data.code===200){
+      let data=res.data.taskData
+      for(let i=0;i<data.length;i++){
+        let task=new Task(data[i].id,data[i].name,data[i].description,data[i].leader,data[i].deadline,data[i].status,data[i].finishedTime,data[i].file,data[i].leaderName,data[i].fileName,data[i].priority)
+        taskList.value.push(task)
+      }
+      filterTask(type.value)
+    }else{
+      ElMessage({
+        message: `获取任务列表失败,${res.data.message}`,
+        type: 'error'
+      })
+    }
+  })
+}
 
+const filteredTaskList=ref<Task[]>([])
+
+const filterTask=(type:string)=>{
+  if(type==='all'){
+    filteredTaskList.value=taskList.value
+  }else if(type==='outdate'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===0&&new Date(task.deadline)<new Date()
+    })
+  }else if(type==='unfinished'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===0&&new Date(task.deadline)>new Date()
+    })
+  }else if(type==='toreview'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===1&&new Date(task.deadline)>new Date()
+    })
+  }else if(type==='finished'){
+    filteredTaskList.value=taskList.value.filter((task)=>{
+      return task.status===2
+    })
+  }
+}
+
+const id=computed(()=>store.state.currentUser.id)
+
+watch(id,()=>{
+  getTaskList()
+})
+
+const type=ref('all')
+
+onMounted(()=>{
+  if(store.state.currentUser.id!==-1){
+    getTaskList()
+  }
+})
 
 
 </script>
 
 <template>
-  <div class="flex flex-col justify-center w-full">
-    <div class="flex items-center justify-center px-3">
-      <el-card class="task-status">
-        <template #header>
-          <h1>已完成</h1>
-        </template>
-        <el-scrollbar>
-          <div v-for="(task,index) in finishedTask" :key="index" class="my-3">
-            <el-card>
-              <h1>{{ task.title }}</h1>
-              <div>{{ task.content }}</div>
-              <el-text>{{ task.time }}</el-text>
-            </el-card>
-          </div>
-        </el-scrollbar>
-      </el-card>
-      <el-card class="task-status">
-        <template #header>
-          <h1>进行中</h1>
-        </template>
-        <el-scrollbar>
-          <div v-for="(task,index) in onDoingTask" :key="index" class="my-3">
-            <el-card>
-              <h1>{{ task.title }}</h1>
-              <div>{{ task.content }}</div>
-              <el-text>{{ task.time }}</el-text>
-            </el-card>
-          </div>
-        </el-scrollbar>
-      </el-card>
-      <el-card class="task-status">
-        <template #header>
-          <h1>未开始</h1>
-        </template>
-        <el-scrollbar>
-          <div v-for="(task,index) in toDoTask" :key="index" class="my-3">
-            <el-card>
-              <h1>{{ task.title }}</h1>
-              <div>{{ task.content }}</div>
-              <el-text>{{ task.time }}</el-text>
-            </el-card>
-          </div>
-        </el-scrollbar>
-      </el-card>
+  <div class="flex flex-col justify-start w-full p-10">
+    <div class="flex justify-between items-center w-full">
+      <p class="font-bold text-3xl">任务列表</p>
+      <el-radio-group v-model="type" @change="filterTask(type)">
+        <el-radio-button label="all">全部</el-radio-button>
+        <el-radio-button label="outdate">已过期</el-radio-button>
+        <el-radio-button label="unfinished">未完成</el-radio-button>
+        <el-radio-button label="toreview">待审核</el-radio-button>
+        <el-radio-button label="finished">已完成</el-radio-button>
+      </el-radio-group>
     </div>
-    <div class="flex items-center justify-start px-3 py-2 mx-8">
-      <el-card v-for="(meeting,index) in upcomingMeeting" :key="index" class="mx-2">
-        <h1>{{ meeting.title }}</h1>
-        <h2>{{ meeting.content }}</h2>
-      </el-card>
+    
+    <el-row class="py-4">
+      <div v-if="filteredTaskList.length===0" class="w-full h-full flex justify-center items-center">
+        <p class="font-bold text-3xl" >这里还没有任务</p>
+      </div>
+      <el-col v-else :span="8" v-for="(task,index) in filteredTaskList.slice(start,start+pageSize)" :key="index">
+        <div class="p-2">
+          <TaskCard :task="task"/>
+        </div>
+      </el-col>
+    </el-row>
+    <div class="py-3 flex justify-center items-center">
+      <el-pagination hide-on-single-page layout="prev, pager, next" :total="filteredTaskList.length" background :page-size="pageSize" v-model:current-page="currentPage" />
     </div>
   </div>
   

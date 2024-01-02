@@ -72,7 +72,6 @@
 import { watchEffect ,defineComponent, ref, computed , onMounted,reactive} from 'vue';
 import axios from "axios";
 import {useStore} from 'vuex'
-import { options } from 'node_modules/axios/index.cjs';
 
 
 interface Member {

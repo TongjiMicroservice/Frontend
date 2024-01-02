@@ -3,7 +3,7 @@
     <div class="flex flex-col p-3">
       <el-radio-group v-model="view" class="pt-5">
         <el-radio-button label="manage-member">成员管理</el-radio-button>
-        <el-radio-button label="manage-application">项目管理</el-radio-button>
+        <el-radio-button label="manage-application">申请审批</el-radio-button>
       </el-radio-group>
       <div v-if="view==='manage-member'">
 

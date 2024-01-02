@@ -12,11 +12,21 @@
             <span>项目进度追踪</span>
           </template>
         </el-menu-item>
-        <el-menu-item index="/manage/member">
+        <el-sub-menu>
           <template #title>
             <span>项目成员管理</span>
           </template>
-        </el-menu-item>
+          <el-menu-item index="/manage/member">
+            <template #title>
+              <span>成员管理</span>
+            </template>
+          </el-menu-item>
+          <el-menu-item index="/manage/application">
+            <template #title>
+              <span>申请管理</span>
+            </template>
+          </el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/manage/task">
             <template #title>
                 <span>项目任务管理</span>

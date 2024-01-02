@@ -26,11 +26,12 @@
               v-model="showDialog"
               width="30%"
           >
-            <el-input
-                v-model.number="privilegeValue"
-                type="number"
-                placeholder="请输入新的权限值"
-            ></el-input>
+            <el-select
+                v-model="privilegeValue"
+            >
+              <el-option v-for="(item,index) in privilegeOtions" :key="index" :label="item.label" :value="item.value">
+              </el-option>
+            </el-select>
             <template #footer>
               <span class="dialog-footer">
                 <el-button @click="closeDialog">取消</el-button>
@@ -125,9 +126,22 @@ export default defineComponent({
     const memberResponse = ref<MemberResponse[]>([]);
     const showDialog = ref(false);//privilege
     const privilegeValue = ref<number | ''>(''); // 初始化为空字符串
+    const privilege=ref<string>('');
     const currentUserId = ref<number | null>(null); // 当前被修改权限的用户ID
     const dialogVisible = ref(false);//invite
     const email = ref('');
+
+    const privilegeOtions=[
+      {
+        value: 0,
+        label: '成员'
+      },
+      {
+        value: 1,
+        label: '管理员'
+      }
+    ]
+
 
     const store=useStore();
     const userId = computed(() => store.state.currentUser.id);
@@ -138,7 +152,7 @@ export default defineComponent({
     const confirmEmail = () => {
       console.log(email.value);
       sendInvite();
-      window.location.reload();
+      // window.location.reload();
       dialogVisible.value = false;
       // window.location.reload();
     };
@@ -312,6 +326,8 @@ export default defineComponent({
       showDialog,
       confirmPrivilege,
       privilegeValue,
+      privilegeOtions,
+      privilege,
       preparePrivilegeChange,
       closeDialog,
       currentUserId,

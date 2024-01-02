@@ -3,7 +3,7 @@
     <div class="flex flex-col mx-5 items-center w-3/4 mt-5">
       <el-input placeholder="请输入搜索内容" v-model="searchQuery" class="my-5 w-3/4">
         <template #append>
-          <el-button icon="Search" type="text"></el-button>
+          <el-button icon="Search" type="text" @click="handleSearch"></el-button>
         </template>
       </el-input>
       <el-skeleton :loading="loading" animated>
@@ -26,8 +26,8 @@
                 <h4>{{ project.name }}</h4>
                 <p class="my-1">项目简介:{{ project.description }}</p>
                 <p class="my-1">项目规模:{{ project.scale }}人</p>
-                <el-button color="#626ae6"  plain>详情</el-button>
-                <el-button color="#626aef"  >加入</el-button>
+                <!-- <el-button color="#626ae6"  plain>详情</el-button> -->
+                <el-button color="#626aef" @click="applyProject(project)" >加入</el-button>
               </el-card>
             </div>
           </div>
@@ -50,15 +50,59 @@
 import { ref, onMounted, computed } from 'vue'
 import Project from '@/models/Project'
 import axios from 'axios';
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+
+
 
 const searchQuery = ref('')
+
 
 const projects=ref<Project[]>([])
 const pageSize=ref(6)
 const currentPage=ref(1)
 const start=computed(()=>(currentPage.value-1)*pageSize.value)
 const loading=ref(false)
+const currentProject=ref<Project>(new Project(-1,'','',0,-1))
+
+const handleSearch=()=>{
+  projects.value=projects.value.filter((project)=>{
+    return project.name.includes(searchQuery.value)
+  })
+}
+
+const applyProject=(project:Project)=>{
+  currentProject.value=project
+  ElMessageBox.confirm(
+        `确定要加入项目${project.name}吗？`,
+        'Warning',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }
+  ).then(() => {
+    axios({
+          method:'post',
+          url:'/api/project/request',
+          params:{
+            projectId:project.id
+          }
+        }).then((r)=>{
+          if(r.status===200&&r.data.code===200){
+            ElMessage({
+              message: `已发送加入项目${project.name}申请`,
+              type: 'success'
+            })
+          }else{
+            ElMessage({
+              message: `发送加入项目${project.name}申请失败,${r.data.message}`,
+              type: 'error'
+            })
+          }
+        })
+  }).catch(() => {
+  })
+}
 
 const handleCurrentChange=(val:number)=>{
   currentPage.value=val

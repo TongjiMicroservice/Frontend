@@ -127,10 +127,14 @@ export default {
     // });
 
   },
-  methods: {
+	unmounted() {
+    console.log("unmounted");
+		this.socket.disconnect();
+	},
+	methods: {
     //加载聊天记录
     loadChatHistory(contactId) {
-      this.socket.emit('fetchChatHistory', {senderId: this.userId, receiverId: this.selectedId});
+      this.socket.emit('chatHistoryRequest', this.selectedId);
       this.updateRead(contactId);
     },
     //选择联系人
@@ -138,20 +142,14 @@ export default {
       this.selectedId = selectedId;
       console.log("Chat with:", selectedId);
       this.updateRead(selectedId);
-      this.socket.emit('updateReadStatus', {
-        senderId: selectedId,
-        receiverId: this.userId
-      });
+      this.socket.emit('acknowledgeRequest', selectedId);
 
       this.loadChatHistory(selectedId);
 
     },
 
     updateRead(selectedId) {
-      this.socket.emit('updateReadStatus', {
-        senderId: selectedId,
-        receiverId: this.userId
-      });
+			this.socket.emit('acknowledgeRequest', selectedId);
     },
     //发送信息
     sendMessage() {
@@ -165,7 +163,7 @@ export default {
         timestamp: timestamp,
         isRead: false
       });
-      this.socket.emit('messageEvent', {
+      this.socket.emit('messageRequest', {
         senderId: this.userId,
         receiverId: this.selectedId,
         message: this.message,
@@ -220,7 +218,8 @@ export default {
       this.socket.on('recentChatResponse', (data) => {
         console.log('Recent chats:', data);
         this.identityOptions = data.map(item => {
-          return {name: item.contactId, contactId: item.contactId};
+					console.log(item);
+          return {name: item.name, contactId: item.id};
         });
       });
       //收到聊天记录的通知
@@ -243,6 +242,8 @@ export default {
         //data:字符串id
       });
       console.log('Socket connection established.');
+			this.socket.emit('loginRequest', this.userId);
+			this.socket.emit('recentChatRequest', this.userId);
     }
   },
   watch: {

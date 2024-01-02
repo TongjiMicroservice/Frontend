@@ -82,16 +82,18 @@ import { defineComponent, ref, onMounted } from 'vue';
 import axios from 'axios';
 import Meeting from '@/models/Meeting'
 import {ElMessage} from 'element-plus'
+import { useStore } from 'vuex';
 
 export default defineComponent({
   setup() {
+    const store=useStore();
     const startedMeetings = ref<Meeting[]>([]);
     const upcomingMeetings = ref<Meeting[]>([]);
     const dialogVisible = ref(false);
     const membersDialogVisible = ref(false);
     const startedCurrentPage = ref(1);
     const upcomingCurrentPage = ref(1);
-    const userId = ref(null); 
+    //const userId = ref(null); 
     const meetingForm = ref({
       title: '',
       description: '',
@@ -99,18 +101,19 @@ export default defineComponent({
       deadline: ''
     });
 
-    const fetchUserId = () => {
+    /*const fetchUserId = () => {
       axios.get('http://luxingzhi.cn:8090/api/user')
         .then((response) => {
           const data = response.data;
           if (data.code === 200) {
+            console.log(userId)
             userId.value = data.userId; // 将获取到的userId存入ref
             fetchMeetings(); // 获取userId后调用fetchMeetings
           } else {
             console.error('Failed to fetch userId: ' + data.message);
           }
         })
-    };
+    };*/
     
       //处理翻页逻辑
     const handleCurrentChange1 = (val: number) => {
@@ -122,7 +125,21 @@ export default defineComponent({
 
     const showCreateMeetingDialog = () => {
       //弹出创建窗口逻辑---role判断
-      dialogVisible.value = true;
+      axios.get(`http://luxingzhi.cn:8090/api/project/privilege/get?projectId=${store.state.currentProjectId}&userId=${store.state.currentUser.id}`)
+        .then((response) => {
+          const data = response.data;
+          if (data.code === 200) {
+            if (data.privilege === 2) {
+              dialogVisible.value = true; 
+            }
+            else{
+              ElMessage.error("无创建权限");
+            }
+          }
+          else{
+            ElMessage.error("获取权限失败");
+          }
+        })
     };
 
     const showMembersDialog = (meetingId: string) => {
@@ -131,7 +148,6 @@ export default defineComponent({
     };
 
     const createMeeting = () => {
-      const projectId = 1; // 假设当前项目的 projectId 为 1
       const formData = {
         projectId,
         title: meetingForm.value.title,
@@ -166,10 +182,13 @@ export default defineComponent({
     };
 
     const fetchMeetings = () => {
-      if (!userId.value) {
-        return; // 如果userId未获取到，直接返回
-      }
-      axios.get(`http://luxingzhi.cn:8090/api/meeting/user/${userId.value}`)
+      axios({
+        method:'get',
+        url:`/api/meeting/user/`,
+        params:{
+          userId:store.state.currentUser.id,
+        }
+      })
         .then((response) => {
           const data = response.data;
           if (data.code === 200) {
@@ -184,7 +203,7 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      fetchUserId();
+      //fetchUserId();
       fetchMeetings();
     });
 

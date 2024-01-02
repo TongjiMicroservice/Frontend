@@ -127,11 +127,11 @@ export default {
     // });
 
   },
-	unmounted() {
+  unmounted() {
     console.log("unmounted");
-		this.socket.disconnect();
-	},
-	methods: {
+    this.socket.disconnect();
+  },
+  methods: {
     //加载聊天记录
     loadChatHistory(contactId) {
       this.socket.emit('chatHistoryRequest', this.selectedId);
@@ -149,7 +149,7 @@ export default {
     },
 
     updateRead(selectedId) {
-			this.socket.emit('acknowledgeRequest', selectedId);
+      this.socket.emit('acknowledgeRequest', selectedId);
     },
     //发送信息
     sendMessage() {
@@ -218,7 +218,7 @@ export default {
       this.socket.on('recentChatResponse', (data) => {
         console.log('Recent chats:', data);
         this.identityOptions = data.map(item => {
-					console.log(item);
+          console.log(item);
           return {name: item.name, contactId: item.id};
         });
       });
@@ -242,8 +242,8 @@ export default {
         //data:字符串id
       });
       console.log('Socket connection established.');
-			this.socket.emit('loginRequest', this.userId);
-			this.socket.emit('recentChatRequest', this.userId);
+      this.socket.emit('loginRequest', this.userId);
+      this.socket.emit('recentChatRequest', this.userId);
     }
   },
   watch: {

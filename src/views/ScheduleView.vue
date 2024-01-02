@@ -8,7 +8,7 @@ import { ElRadio } from 'element-plus'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
 
-
+// 会议列表，先自己初始化一些数据
 onMounted(() => {
   getMeetingList()
 })
@@ -54,15 +54,7 @@ const formatDateTime = (dateTimeString: string) => {
 }
 
 const taskList = ref<Task[]>([])
-// taskList.value.push(
-//   new Task(1, '2023-12-01 10:00', '2023-12-01 11:00', '任务1的名称', '任务1的描述')
-// )
-// taskList.value.push(
-//   new Task(2, '2024-01-02 00:00', '2024-01-02 10:00', '任务2的名称', '任务2的描述')
-// )
-// taskList.value.push(
-//   new Task(2, '2024-01-02 20:00', '2024-01-02 21:00', '任务3的名称', '任务3的描述')
-// )
+
 //dealMyDate函数,输入年月日，返回taskList中的任务名称
 const dealMyDate = (date: any) => {
   let year = date.split('-')[0]
@@ -164,7 +156,8 @@ const createSchedule = () => {
     })
     return
   }
-
+  console.log("startTime",startTime.value)
+  console.log("priority",priority.value)
   axios({
     method: 'post',
     url: '/api/schedule/create',
@@ -197,21 +190,6 @@ const createSchedule = () => {
 }
 
 // 获取日程列表
-// /api/schedule/get
-// no params
-//{
-//   "code": 0,
-//   "message": "string",
-//   "events": [
-//     {
-//       "title": "string",
-//       "description": "string",
-//       "startTime": "2024-01-02T16:00:52.532Z",
-//       "deadline": "2024-01-02T16:00:52.532Z",
-//       "priority": 0
-//     }
-//   ]
-// }
 const getSchedule = () => {
   axios({
     method: 'get',
@@ -252,24 +230,6 @@ const getSchedule = () => {
   )
 }
 // 获取会议列表
-// /api/meeting/user/{userId}
-// userId
-// {
-//   "code": 0,
-//   "message": "string",
-//   "meetings": [
-//     {
-//       "id": "string",
-//       "projectId": 0,
-//       "title": "string",
-//       "description": "string",
-//       "startTime": "2024-01-02T16:44:41.473Z",
-//       "duration": 0,
-//       "url": "string",
-//       "bookId": "string"
-//     }
-//   ]
-// }
 const getMeetingList = () => {
   axios({
     method: 'get',
@@ -277,6 +237,7 @@ const getMeetingList = () => {
   })
     .then((r) => {
       if (r.status === 200 && r.data.code === 200) {
+
         ElMessage({
           message: '会议列表获取成功',
         })
@@ -285,18 +246,11 @@ const getMeetingList = () => {
         taskList.value = []
         for (let i = 0; i < r.data.meetings.length; i++) {
           let task = r.data.meetings[i]
-
-
-          // 计算结束时间
-          const endTime = task.startTime.getTime() + task.duration * 60000;
-
-          // 将 endTime 转换为字符串形式
-          const endTimeString = endTime.toISOString();
           taskList.value.push(
             new Task(
               task.id,
               formatDateTime(task.startTime),
-              formatDateTime(endTimeString),
+              formatDateTime(task.startTime),
               task.title,
               task.description,
               0
@@ -346,6 +300,11 @@ const handleRadioChange = (value:any) => {
 
 <template>
   <div class="container">
+    <el-radio-group v-model="radio" class="radio-group py-4">
+      <el-radio-button label="meeting">会议</el-radio-button>
+      <el-radio-button label="schedule">日程</el-radio-button>
+      <el-radio-button label="task">任务</el-radio-button>
+    </el-radio-group>
     <el-calendar>
       <template #date-cell="{ data }">
         <div @click=";(centerDialogVisible = true)">
@@ -356,6 +315,8 @@ const handleRadioChange = (value:any) => {
         </div>
         <div class="task-list-container" style="gap: 5px">
           <el-button
+          type="info"
+            link
             v-for="task in dealMyDate(data.day)"
             :key="task.taskId"
             @click="showTaskDetail(task)"
@@ -366,11 +327,7 @@ const handleRadioChange = (value:any) => {
       </template>
     </el-calendar>
 
-    <el-radio-group v-model="radio" class="radio-group">
-      <el-radio label="meeting">会议</el-radio>
-      <el-radio label="schedule">日程</el-radio>
-      <el-radio label="task">任务</el-radio>
-    </el-radio-group>
+
 
   </div>
 
@@ -404,7 +361,7 @@ const handleRadioChange = (value:any) => {
 
       <!-- 优先级 -->
         <el-form-item label="优先级">
-          <el-radio-group v-model="priority" class="radio-group">
+          <el-radio-group v-model="priority">
             <el-radio :label="0">普通</el-radio>
             <el-radio :label="1">重要</el-radio>
             <el-radio :label="2">紧急</el-radio>
@@ -434,7 +391,6 @@ const handleRadioChange = (value:any) => {
 .container {
   display: flex;
   flex-direction: column;
-
   /*宽度铺满 */
   width: 100%;
 }

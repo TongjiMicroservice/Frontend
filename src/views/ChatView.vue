@@ -76,7 +76,7 @@ interface ChatMessage {
 }
 export default defineComponent({
   setup() {
-
+    const SERVER_URL = 'http://luxingzhi.cn:9092';
     const store=useStore();
     const userId = computed(() => store.state.currentUser.id);
     console.log("当前登录用户"+userId.value);
@@ -136,7 +136,7 @@ export default defineComponent({
     setInterval(() => {
       loadChatHistory();
     }, 5000);
-    const socket = io('http://localhost:9092');
+    const socket = io(SERVER_URL);
     socket.emit('loginRequest', userId.value);
     watch(() => route.params.userId, (newUserId) => {
       beginchatId.value = newUserId;
@@ -263,6 +263,7 @@ export default defineComponent({
       beginchatId,
       fetchUserDetails,
       loadChatHistory,
+      SERVER_URL,
     };
   },
 });

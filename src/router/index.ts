@@ -40,14 +40,14 @@ const router = createRouter({
       name:'search_project',
       component: SearchProjectPage
     },
-    
+
     {
       path: '/',
       name: 'main',
       component: MainPage,
       children:[
         {
-          path: '/chat',
+          path: '/chat/:userId?',
           name: 'chat',
           component: ChatView,
         },

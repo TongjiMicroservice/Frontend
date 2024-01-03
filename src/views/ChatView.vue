@@ -46,12 +46,31 @@
 
         <el-footer style="height: auto; padding: 10px;">
           <!-- 聊天输入区域 -->
-          <el-input
-              type="textarea"
-              v-model="inputMessage"
-              placeholder="输入消息..."
-          ></el-input>
+<!--          <el-input-->
+<!--              type="textarea"-->
+<!--              v-model="inputMessage"-->
+<!--              placeholder="输入消息..."-->
+<!--          ></el-input>-->
+          <div class="chat-input-area">
+            <!-- 表情按钮 -->
+            <button @click="toggleEmojiPanel">😀</button>
+
+            <!-- 表情面板 -->
+            <div v-if="showEmojis" class="emoji-container">
+               <span v-for="(emoji, index) in emojis" :key="index" @click="addEmojiToInput(emoji)">
+              {{ emoji }}
+                 </span>
+            </div>
+
+            <!-- 输入框 -->
+            <el-input
+                type="textarea"
+                v-model="inputMessage"
+                placeholder="输入消息..."
+            ></el-input>
+
           <el-button color="#626aef" :dark="isDark" @click="sendMessage">发送</el-button>
+          </div>
         </el-footer>
       </el-container>
     </el-col>
@@ -99,6 +118,17 @@ export default defineComponent({
     const route = useRoute();
     // 你可以直接在setup中使用 route.params.userId 或者作为响应式引用
     const beginchatId = ref(route.params.userId|| 1);
+    const showEmojis = ref(false);
+    // 定义切换表情面板的函数
+    const toggleEmojiPanel = () => {
+      showEmojis.value = !showEmojis.value;
+    };
+
+    // 定义添加表情到输入框的函数
+    const addEmojiToInput = (emoji: string) => {
+      inputMessage.value += emoji; // 直接修改响应式变量的值
+      showEmojis.value = false;
+    };
     const populateSenderNames = () => {
       chatHistory.value = chatHistory.value.map((message) => {
         let senderName; // Declare a variable to hold the sender name
@@ -176,7 +206,7 @@ export default defineComponent({
         });
       });
     }
-    
+
     onMounted(() => {
       console.log("发起和"+beginchatId.value+"的聊天");
       const existingContact = contacts.value.find(contact => contact.id === beginchatId.value);
@@ -280,6 +310,10 @@ export default defineComponent({
       loadChatHistory();
     };
     return{
+      showEmojis,
+      emojis: emojiData.data.split(','),
+      toggleEmojiPanel,
+      addEmojiToInput,
       socket,
       userId,
       userName,
@@ -377,5 +411,25 @@ export default defineComponent({
 .sent .message-content {
   background-color:rgba(66,154,155,0.2);/* 标识气泡颜色  */
 }
+.read-status {
+  margin-left: 10px;
+}
 
+.emoji-container {
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  position: absolute; /* 或其他位置调整 */
+  z-index: 1000; /* 确保在输入框上方 */
+  max-height: 80px; /* 或您想要的任何高度 */
+  overflow-y: auto; /* 添加滚动条 */
+
+  transform: translateY(100%); /* 将表情面板向上移动自身的高度 */
+}
+
+.emoji-container span {
+  cursor: pointer;
+  margin: 5px;
+}
 </style>

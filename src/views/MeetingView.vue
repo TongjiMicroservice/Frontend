@@ -52,7 +52,7 @@
     </el-select>
     <el-button type="primary" @click="addParticipants">添加</el-button>
 
-    <el-table :data="meetingParticipants" style="width: 100%">
+    <el-table :data="meetingParticipants.slice((memberCurrentPage-1)*5,memberCurrentPage*5)" style="width: 100%">
       <el-table-column prop="name" label="成员姓名">
         <template #default="{ row }">
           {{ row.name }} <span v-if="row.role === 'host'">(host)</span>
@@ -60,18 +60,25 @@
       </el-table-column>
       <el-table-column label="操作">
         <template #default="{ row }">
-          <el-button type="primary" @click="setHost(row)" :pressed="row.role === 'host'">主持人</el-button>
+          <el-button type="primary" @click="setHost(row)">主持人</el-button>
           <el-button type="danger" @click="deleteParticipant(row.meeting_id, row.participant_id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      @current-change="memberCurrentChange"
+      :current-page="memberCurrentPage"
+      :page-size="5"
+      layout="prev, pager, next"
+      :total="meetingParticipants.length">
+     </el-pagination>
 
   </el-dialog>
 
     <!--创建会议窗口-->
     <el-button type="primary" @click="showCreateMeetingDialog">创建</el-button>
-    <el-dialog v-model="dialogVisible" title="创建会议">
-      <el-form :model="meetingForm" label-width="80px">
+    <el-dialog v-model="dialogVisible" title="创建会议" >
+      <el-form :model="meetingForm" label-width="80px" ref="meetingFormRef">
         <el-form-item label="会议标题" prop="title">
           <el-input v-model="meetingForm.title"></el-input>
         </el-form-item>
@@ -125,11 +132,11 @@ export default defineComponent({
     const membersDialogVisible = ref(false);
     const startedCurrentPage = ref(1);
     const upcomingCurrentPage = ref(1);
+    const memberCurrentPage = ref(1);
     const members = ref<Member[]>([]); //项目成员
     const selectedMembers = ref<number[]>([]); //被选成员
-
     const meetingParticipants = ref<MeetingParticipant[]>([]); //参会人员
-
+    //const meetingFormRef = ref<ElForm | null>(null); 
     var currentMeetingId='';//当前会议Id
     const meetingForm = ref({
       title: '',
@@ -144,6 +151,9 @@ export default defineComponent({
     };
     const handleCurrentChange2 = (val: number) => {
       upcomingCurrentPage.value=val;
+    };
+    const handleCurrentChange3 = (val: number) => {
+      memberCurrentPage.value=val;
     };
 
     const showCreateMeetingDialog = () => {
@@ -221,6 +231,7 @@ export default defineComponent({
       .then((responses) => {
           ElMessage.success('添加参会人成功');
           fetchParticipants(currentMeetingId);
+          selectedMembers.value = [];
         })
         .catch((error) => {
           console.error('Error adding participants', error);
@@ -354,8 +365,10 @@ export default defineComponent({
       cancelMeeting,
       startedCurrentPage,
       upcomingCurrentPage,
+      memberCurrentPage,
       handleCurrentChange1,
       handleCurrentChange2,
+      handleCurrentChange3,
       members,
       selectedMembers,
       addParticipants,
@@ -372,5 +385,4 @@ export default defineComponent({
   margin-bottom: 30px;
   position: relative;
 }
-
 </style>

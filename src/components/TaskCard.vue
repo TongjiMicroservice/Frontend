@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Task from '@/models/Task';
-import {defineProps,onMounted,ref} from 'vue'
+import {onMounted,ref} from 'vue'
 import axios from 'axios'
 import {ElMessage} from 'element-plus'
 import type { UploadInstance, UploadProps, UploadRawFile } from 'element-plus'
@@ -15,6 +15,8 @@ const props=defineProps({
     required:true
   }
 })
+
+const emit = defineEmits(['submit'])
 
 const handleExceed: UploadProps['onExceed'] = (files) => {
   upload.value!.clearFiles()
@@ -88,7 +90,6 @@ const getTaskMembers=(taskId:number)=>{
               avatar:r.data.avatar
             }
             currentTaskMembers.value.push(user)
-            console.log(currentTaskMembers.value)
           }else{
             ElMessage({
               message: `获取任务成员失败，${r.data.message}`,
@@ -106,11 +107,52 @@ const getTaskMembers=(taskId:number)=>{
   })
 }
 
+const handleUploadSuccess = (response: any, file: any, fileList: any) => {
+  ElMessage({
+    message: '文件上传成功',
+    type: 'success'
+  })
+  console.log(response)
+  if(response.code===200){
+    let fileData=response.fileData
+    submitTask(fileData)
+  }
+};
+
+const submitTask=(fileData:any)=>{
+  axios({
+    method:'put',
+    url:'/api/task/member/upload',
+    params:{
+      taskId:props.task.taskId,
+      fileURL:fileData.url
+    }
+  }).then((res)=>{
+    if(res.status===200&&res.data.code===200){
+      ElMessage({
+        message: '任务提交成功',
+        type: 'success'
+      })
+      emit('submit')
+    }else{
+      ElMessage({
+        message: `任务提交失败，${res.data.message}`,
+        type: 'error',
+      });
+    }
+  })
+}
+
+const handleUploadError = (err: Error, file: any, fileList: any) => {
+  ElMessage({
+    message: '文件上传失败',
+    type: 'error'
+  })
+}
+
 onMounted(()=>{
   getTaskMembers(props.task.taskId)
 })
-
-console.log(props.task)
 </script>
 
 <template>
@@ -172,10 +214,13 @@ console.log(props.task)
         <el-upload
             ref="upload"
             class="upload-demo"
-            :action="`https://luxingzhi.cn:8090/api/file?userId=${store.state.currentUser.id}&projectId=${store.state.currentProjectId}`"
+            :action="`http://luxingzhi.cn:8090/api/file?userId=${store.state.currentUser.id}&projectId=${store.state.currentProjectId}`"
             :limit="1"
             :on-exceed="handleExceed"
             :auto-upload="false"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+            multiple
         >
             <template #trigger>
             <el-button link type="primary">选择证明材料</el-button>

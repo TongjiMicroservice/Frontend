@@ -4,14 +4,9 @@
     <div class="h-full w-1/6">
       <el-menu 
         class="manage-sidebar"
-        default-active="/manage/project"
+        default-active="/manage/member"
         router
       >
-        <el-menu-item index="/manage/project">
-          <template #title>
-            <span>项目进度追踪</span>
-          </template>
-        </el-menu-item>
         <el-sub-menu>
           <template #title>
             <span>项目成员管理</span>

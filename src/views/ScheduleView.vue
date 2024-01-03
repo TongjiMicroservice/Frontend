@@ -7,19 +7,19 @@ import { ElButton } from 'element-plus'
 import { ElRadio } from 'element-plus'
 import { useStore } from 'vuex'
 import { ElMessage } from 'element-plus'
+import { routeLocationKey } from 'vue-router'
 
 // 会议列表，先自己初始化一些数据
 onMounted(() => {
-  getMeetingList()
+  getSchedule()
 })
 
 const store = useStore()
-const currentProjectId = ref(store.state.currentProjectId)
 const userId = ref(store.state.currentUser.id)
 // task : 开始时间和结束时间(年月日时分)，任务名称，任务描述，任务id
 // class
 
-const radio = ref('meeting')
+const radio = ref('schedule')
 const centerDialogVisible = ref(false)
 const startTime = ref('')
 const endTime = ref('')
@@ -34,7 +34,8 @@ class Task {
     public endTime: string = "",
     public taskName: string = "",
     public taskDescription: string = "",
-    public status: number = 0
+    public status: number = 0,
+    public priority: number = 0
   ) {}
 }
 
@@ -119,7 +120,8 @@ const getTaskList = () => {
               formatDateTime(task.deadline),
               task.name,
               task.description,
-              task.status
+              task.status,
+              task.priority
             )
           )
         }
@@ -156,8 +158,6 @@ const createSchedule = () => {
     })
     return
   }
-  console.log("startTime",startTime.value)
-  console.log("priority",priority.value)
   axios({
     method: 'post',
     url: '/api/schedule/create',
@@ -174,7 +174,8 @@ const createSchedule = () => {
         ElMessage({
           message: '日程创建成功',
         })
-        console.log('创建的日程',r.data.data)
+        centerDialogVisible.value = false
+        radio.value = 'schedule'
       } else {
         ElMessage({
           message: `日程创建失败,${r.data.message}`,
@@ -272,7 +273,7 @@ const getMeetingList = () => {
 }
 
 // 监听radio的变化，根据radio的值来决定显示的是会议还是日程还是任务
-watch(radio, (newValue, oldValue) => {
+watch(radio, (newValue) => {
       // newValue 是新的值，oldValue 是变化前的值
       handleRadioChange(newValue);
     });
@@ -314,15 +315,17 @@ const handleRadioChange = (value:any) => {
           </p>
         </div>
         <div class="task-list-container" style="gap: 5px">
-          <el-button
-          type="info"
-            link
+          <div 
             v-for="task in dealMyDate(data.day)"
             :key="task.taskId"
-            @click="showTaskDetail(task)"
           >
-            {{ task.taskName }}
-          </el-button>
+            <el-tag
+              type="success"
+              @click="showTaskDetail(task)"
+            >
+              {{ task.taskName }}
+            </el-tag>
+          </div>
         </div>
       </template>
     </el-calendar>
@@ -386,6 +389,10 @@ const handleRadioChange = (value:any) => {
 .task-list-container {
   max-height: 30px; /* 调整为适当的高度，超过此高度将显示滚动条 */
   overflow-y: auto;
+  display:flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 
 .container {

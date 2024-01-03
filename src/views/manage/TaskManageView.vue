@@ -98,6 +98,7 @@ const getTaskMembers=(taskId:number)=>{
 }
 
 const getTaskList = ():Promise<Boolean> => {
+  loading.value=true
   taskList.value=[]
   return axios({
     method: 'get',
@@ -113,12 +114,14 @@ const getTaskList = ():Promise<Boolean> => {
         taskList.value.push(task)
       }
       filterTask(taskType.value)
+      loading.value=false
       return true
     } else {
       ElMessage({
         message: `获取任务列表失败，${res.data.message}`,
         type: 'error',
       });
+      loading.value=false
       return false
     }
   });
@@ -262,7 +265,6 @@ const addAllTaskMember=()=>{
   });
 }
 
-const view=ref('task_overview')
 
 const taskType=ref('all')
 
@@ -307,6 +309,7 @@ const getScreenSize=()=>{
   // pageSize.value=(Math.floor((windowHeight.value-200)/70))
 }
 
+const loading=ref(false)
 
 
 const filterTask=(type:string)=>{
@@ -361,7 +364,7 @@ onMounted(() => {
       <el-button class="mr-20" type="primary" @click="createTaskVisible=true">创建任务</el-button>
     </div>
     <div class="w-full py-4 overflow-auto">
-      <el-table stripe :data="filteredTaskList.slice(start,start+pageSize)" class="w-full">
+      <el-table v-loading="loading" stripe :data="filteredTaskList.slice(start,start+pageSize)" class="w-full">
         <el-table-column  fixed prop="name" label="名称"></el-table-column>
         <el-table-column label="状态">
           <template #default="scope">

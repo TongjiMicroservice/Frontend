@@ -9,7 +9,7 @@
             <el-radio-button label="passed">已通过</el-radio-button>
             <el-radio-button label="rejected">已拒绝</el-radio-button>
         </el-radio-group>
-        <el-table stripe :data="filteredApplications" class="w-full mt-5">
+        <el-table v-loading="loading" stripe :data="filteredApplications.slice(start,start+pageSize)" class="w-full mt-5">
             <el-table-column prop="name" label="用户名"></el-table-column>
             <el-table-column label="申请时间">
                 <template #default="scope">
@@ -55,6 +55,8 @@ const store = useStore();
 
 const view=ref('unhandled')
 
+const loading = ref(false);
+
 const applications = ref<Application[]>([]);
 const filteredApplications = ref<Application[]>([]);
 
@@ -93,6 +95,7 @@ const handleApplication = (id: number, status: number) => {
 }
 
 const getApplications = ()=>{
+    loading.value=true
     axios.get(`/api/project/request?projectId=${store.state.currentProjectId}`).then((res)=>{
         if(res.status===200&&res.data.code===200){
             applications.value=res.data.list
@@ -100,11 +103,13 @@ const getApplications = ()=>{
                 message: `获取申请列表成功`,
                 type: 'success'
             })
+            loading.value=false
         }else{
             ElMessage({
                 message: `获取申请列表失败,${res.data.message}`,
                 type: 'error'
             })
+            loading.value=false
         }
     })
 }

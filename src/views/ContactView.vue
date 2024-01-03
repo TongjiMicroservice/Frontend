@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="w-full">
     <el-input v-model="searchQuery" placeholder="搜索成员..."></el-input>
     <el-row :gutter="20">
 
@@ -20,25 +20,26 @@
             </el-popover>
           </span>
 
-          <el-button @click="preparePrivilegeChange(member.userId)">更改权限</el-button>
+          <el-button v-if="currentUserRole==='leader'" @click="preparePrivilegeChange(member.userId)">更改权限</el-button>
           <el-dialog
               title="更改权限"
               v-model="showDialog"
               width="30%"
           >
-            <el-input
-                v-model.number="privilegeValue"
-                type="number"
-                placeholder="请输入新的权限值"
-            ></el-input>
+            <el-select
+                v-model="privilegeValue"
+            >
+              <el-option v-for="(item,index) in privilegeOtions" :key="index" :label="item.label" :value="item.value">
+              </el-option>
+            </el-select>
             <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="closeDialog">取消</el-button>
-        <el-button type="primary" @click="confirmPrivilege">确认</el-button>
-      </span>
+              <span class="dialog-footer">
+                <el-button @click="closeDialog">取消</el-button>
+                <el-button type="primary" @click="confirmPrivilege">确认</el-button>
+              </span>
             </template>
           </el-dialog>
-          <el-button @click="deleteUser(member.userId)">删除</el-button>
+          <el-button v-if="currentUserRole==='leader'" @click="deleteUser(member.userId)">删除</el-button>
           <el-button>聊天</el-button>
         </div>
       </el-col>
@@ -125,19 +126,33 @@ export default defineComponent({
     const memberResponse = ref<MemberResponse[]>([]);
     const showDialog = ref(false);//privilege
     const privilegeValue = ref<number | ''>(''); // 初始化为空字符串
+    const privilege=ref<string>('');
     const currentUserId = ref<number | null>(null); // 当前被修改权限的用户ID
     const dialogVisible = ref(false);//invite
     const email = ref('');
 
+    const privilegeOtions=[
+      {
+        value: 0,
+        label: '成员'
+      },
+      {
+        value: 1,
+        label: '管理员'
+      }
+    ]
+
+
     const store=useStore();
     const userId = computed(() => store.state.currentUser.id);
     const projectId=computed(() => store.state.currentProjectId);
+    const currentUserRole = computed(() => store.state.role);
     console.log(userId.value)
     console.log(projectId.value)
     const confirmEmail = () => {
       console.log(email.value);
       sendInvite();
-      window.location.reload();
+      // window.location.reload();
       dialogVisible.value = false;
       // window.location.reload();
     };
@@ -311,10 +326,13 @@ export default defineComponent({
       showDialog,
       confirmPrivilege,
       privilegeValue,
+      privilegeOtions,
+      privilege,
       preparePrivilegeChange,
       closeDialog,
       currentUserId,
       dialogVisible,
+      currentUserRole,
       email,
       confirmEmail,
       sendInvite
@@ -331,6 +349,7 @@ export default defineComponent({
   justify-content: space-between;
   border-bottom: 1px solid #eee; /* 添加分割线 */
   padding: 10px 0;
+  width: 100%;
 }
 
 .avatar {

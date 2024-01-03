@@ -40,7 +40,7 @@
             </template>
           </el-dialog>
           <el-button v-if="currentUserRole==='leader'" @click="deleteUser(member.userId)">删除</el-button>
-          <el-button>聊天</el-button>
+          <el-button @click="goToChat(member.userId)">聊天</el-button>
         </div>
       </el-col>
     </el-row>
@@ -72,7 +72,7 @@
 import { watchEffect ,defineComponent, ref, computed , onMounted,reactive} from 'vue';
 import axios from "axios";
 import {useStore} from 'vuex'
-
+import { useRouter } from 'vue-router';
 
 interface Member {
   userId: number;
@@ -144,6 +144,7 @@ export default defineComponent({
 
 
     const store=useStore();
+    const router = useRouter();
     const userId = computed(() => store.state.currentUser.id);
     const projectId=computed(() => store.state.currentProjectId);
     const currentUserRole = computed(() => store.state.role);
@@ -285,6 +286,10 @@ export default defineComponent({
         console.error('权限更改失败', error);
       }
     };
+    const goToChat = async (userId:number) => {
+      router.push({ name: 'chat', params: { userId: userId } });
+      console.log("前往和"+userId+"聊天");
+    }
     const closeDialog = () => {
       showDialog.value = false;
       privilegeValue.value = ''; // 重置权限值
@@ -335,7 +340,8 @@ export default defineComponent({
       currentUserRole,
       email,
       confirmEmail,
-      sendInvite
+      sendInvite,
+      goToChat
 
     };
   }

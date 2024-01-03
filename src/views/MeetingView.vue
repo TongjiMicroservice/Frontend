@@ -46,10 +46,27 @@
   </div>
 
     <!--成员管理窗口-->
-    <el-dialog v-model="membersDialogVisible" title="成员列表">
-      <!-- 成员列表的展示逻辑 -->
-      <!-- ... -->
-    </el-dialog>
+    <el-dialog v-model="membersDialogVisible" title="参会人管理">
+    <el-select v-model="selectedMembers" multiple placeholder="请选择参会人">
+      <el-option v-for="member in members" :key="member.userId" :label="member.name" :value="member.userId"></el-option>
+    </el-select>
+    <el-button type="primary" @click="addParticipants">添加</el-button>
+
+    <el-table :data="meetingParticipants" style="width: 100%">
+      <el-table-column prop="name" label="成员姓名">
+        <template #default="{ row }">
+          {{ row.name }} <span v-if="row.role === 'host'">(host)</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作">
+        <template #default="{ row }">
+          <el-button type="primary" @click="setHost(row)" :pressed="row.role === 'host'">主持人</el-button>
+          <el-button type="danger" @click="deleteParticipant(row.meeting_id, row.participant_id)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+  </el-dialog>
 
     <!--创建会议窗口-->
     <el-button type="primary" @click="showCreateMeetingDialog">创建</el-button>
@@ -84,6 +101,21 @@ import Meeting from '@/models/Meeting'
 import {ElMessage} from 'element-plus'
 import { useStore } from 'vuex';
 
+interface Member { //项目成员声明
+  userId: number;
+  projectId: number;
+  privilege: number;
+  name: string;
+  avatar: string;
+}
+interface MeetingParticipant {
+  id: number;
+  name: string;
+  meeting_id: string;
+  participant_id: number;
+  role: string;
+}
+
 export default defineComponent({
   setup() {
     const store=useStore();
@@ -93,27 +125,18 @@ export default defineComponent({
     const membersDialogVisible = ref(false);
     const startedCurrentPage = ref(1);
     const upcomingCurrentPage = ref(1);
-    //const userId = ref(null); 
+    const members = ref<Member[]>([]); //项目成员
+    const selectedMembers = ref<number[]>([]); //被选成员
+
+    const meetingParticipants = ref<MeetingParticipant[]>([]); //参会人员
+
+    var currentMeetingId='';//当前会议Id
     const meetingForm = ref({
       title: '',
       description: '',
       startTime: '',
       deadline: ''
     });
-
-    /*const fetchUserId = () => {
-      axios.get('http://luxingzhi.cn:8090/api/user')
-        .then((response) => {
-          const data = response.data;
-          if (data.code === 200) {
-            console.log(userId)
-            userId.value = data.userId; // 将获取到的userId存入ref
-            fetchMeetings(); // 获取userId后调用fetchMeetings
-          } else {
-            console.error('Failed to fetch userId: ' + data.message);
-          }
-        })
-    };*/
     
       //处理翻页逻辑
     const handleCurrentChange1 = (val: number) => {
@@ -125,11 +148,17 @@ export default defineComponent({
 
     const showCreateMeetingDialog = () => {
       //弹出创建窗口逻辑---role判断
-      axios.get(`http://luxingzhi.cn:8090/api/project/privilege/get?projectId=${store.state.currentProjectId}&userId=${store.state.currentUser.id}`)
-        .then((response) => {
+      axios({
+        method:'get',
+        url:`/api/project/privilege/get`,
+        params:{
+          projectId:store.state.currentProjectId,
+          userId:store.state.currentUser.id
+        }
+      }).then((response) => {
           const data = response.data;
           if (data.code === 200) {
-            if (data.privilege === 2) {
+            if (data.privilege === 3) {
               dialogVisible.value = true; 
             }
             else{
@@ -142,25 +171,118 @@ export default defineComponent({
         })
     };
 
-    const showMembersDialog = (meetingId: string) => {
-      // 弹出成员列表的逻辑
+    const fetchParticipants = (meetingId: string) => {
+      axios.get(`/api/meeting/${meetingId}/participants`)
+        .then((response) => {
+          const data = response.data;
+          if (data.code === 200) {
+            meetingParticipants.value = data.participants;
+          } else {
+            ElMessage.error('获取参会人列表失败: ' + data.message);
+          }
+        })
+    };
+
+    const showMembersDialog = (meetingId:string) => {
+      currentMeetingId = meetingId;//点击成员按钮后设置当前会议Id，供addMember调用
       membersDialogVisible.value = true;
+      fetchParticipants(meetingId);
+
+      axios({
+        method:'get',
+        url:'/api/project/member/get',
+        params:{
+          projectId:store.state.currentProjectId
+        }
+      }).then((response) => {
+          const data = response.data;
+          if (data.code === 200) {
+            members.value = data.members;
+          } else {
+            ElMessage.error('获取成员列表失败: ' + data.message);
+          }
+        })
+    };
+    const addParticipant = (meetingId: string, userId: number) => {
+      return axios({
+        method:'post',
+        url:'/api/meeting/participant',
+        params:{
+          meetingId:meetingId,
+          participantId:userId,
+          role:'member'
+        }
+      });
+    };
+
+    const addParticipants = () => {
+      const promises = selectedMembers.value.map(userId => addParticipant(currentMeetingId, userId));
+      Promise.all(promises)
+      .then((responses) => {
+          ElMessage.success('添加参会人成功');
+          fetchParticipants(currentMeetingId);
+        })
+        .catch((error) => {
+          console.error('Error adding participants', error);
+        });
+    };
+
+    const setHost = (participant: MeetingParticipant) => {
+      const newRole = participant.role === 'member' ? 'host' : 'member';
+      axios({
+        method:'put',
+        url:`/api/meeting/participant/${participant.participant_id}/role`,
+        params:{
+          meetingId:participant.meeting_id,
+          participantId:participant.participant_id,
+          role:newRole
+        }
+      }).then((response) => {
+        if(response.data.code==200){
+          ElMessage.success('更改成功');
+          fetchParticipants(participant.meeting_id);
+        }
+        else{
+          console.error('Error setting host', error);
+          ElMessage.error('更改失败');
+        }
+      })
+    };
+
+    const deleteParticipant = (meetingId: string, participantId: number) => {
+      axios({
+        method:'delete',
+        url:`/api/meeting/participant/${participantId}`,
+        params:{
+          meetingId:meetingId,
+          participantId:participantId
+        }
+      }).then((response) => {
+        if(response.data.code==200)
+          fetchParticipants(meetingId);
+        else{
+          console.error('Error deleting participant', error);
+          ElMessage.error('删除参会人失败');
+        }
+      })
     };
 
     const createMeeting = () => {
-      const formData = {
-        projectId,
-        title: meetingForm.value.title,
-        description: meetingForm.value.description,
-        startTime: meetingForm.value.startTime,
-        deadline: meetingForm.value.deadline
-      };
-      axios.post('/api/meeting', formData)
-        .then((response) => {
+      axios({
+        method:'post',
+        url:`/api/meeting`,
+        params:{
+          projectId:store.state.currentProjectId,
+          title: meetingForm.value.title,
+          description: meetingForm.value.description,
+          startTime: meetingForm.value.startTime,
+          deadline: meetingForm.value.deadline
+        }
+      }).then((response) => {
           // 处理创建会议成功的逻辑
-          console.log('Meeting created successfully', response.data);
           dialogVisible.value = false;
           ElMessage.success('创建成功');
+          fetchMeetings();
         })
         .catch((error) => {
           // 处理创建会议失败的逻辑
@@ -182,14 +304,26 @@ export default defineComponent({
     };
 
     const fetchMeetings = () => {
+      if(store.state.role=='member'){
       axios({
         method:'get',
-        url:`/api/meeting/user/`,
-        params:{
-          userId:store.state.currentUser.id,
-        }
-      })
-        .then((response) => {
+        url:`/api/meeting/user/${store.state.currentUser.id}`,
+      }).then((response) => {
+          const data = response.data;
+          if (data.code === 200) {
+            const meetings = data.meetings;
+            const currentTime = new Date().getTime();
+            startedMeetings.value = meetings.filter((meeting: Meeting) => new Date(meeting.startTime).getTime() <= currentTime);
+            upcomingMeetings.value = meetings.filter((meeting: Meeting) => new Date(meeting.startTime).getTime() > currentTime);
+          } else {
+            console.error('Failed to fetch meetings: ' + data.message);
+          }
+        })
+      }else{
+        axios({
+        method:'get',
+        url:`/api/meeting/project/${store.state.currentProjectId}`,
+      }).then((response) => {
           const data = response.data;
           if (data.code === 200) {
             const meetings = data.meetings;
@@ -200,10 +334,10 @@ export default defineComponent({
             console.error('Failed to fetch meetings: ' + data.message);
           }
         })
+      }
     };
 
     onMounted(() => {
-      //fetchUserId();
       fetchMeetings();
     });
 
@@ -221,7 +355,13 @@ export default defineComponent({
       startedCurrentPage,
       upcomingCurrentPage,
       handleCurrentChange1,
-      handleCurrentChange2
+      handleCurrentChange2,
+      members,
+      selectedMembers,
+      addParticipants,
+      setHost,
+      deleteParticipant,
+      meetingParticipants
     };
   }
 });

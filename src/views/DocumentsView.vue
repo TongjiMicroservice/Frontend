@@ -4,8 +4,8 @@
     <el-header style="text-align: right; padding: 0 10px;">
       <el-row>
         <el-col span="10">
-      <div>
-        <el-radio-group v-model="radio" size="large">
+      <div class="p-4">
+        <el-radio-group v-model="radio">
           <el-radio-button label="显示全部" />
           <el-radio-button label="已收藏" />
           <el-radio-button label="未收藏" />
@@ -14,7 +14,7 @@
       </div>
         </el-col>
         <el-col span="4">
-<div class="space"></div>
+          <div class="space"></div>
         </el-col>
         <el-col span="8">
       <div class="header-content">
@@ -23,7 +23,7 @@
             placeholder="搜索文件"
             style="width: 280px;height:40px"
             v-model="searchQuery"
-            class="search-input"
+            class="search-input m-4"
         />
 
       </div></el-col>
@@ -35,7 +35,7 @@
         <el-upload
             class="upload-demo "
             drag
-            :action="'http://localhost:8090/api/file?userId=' + userId + '&projectId=' + projectId"
+            :action="'http://luxingzhi.cn:8090/api/file?userId=' + userId + '&projectId=' + projectId"
 
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
@@ -52,7 +52,7 @@
           </template>
         </el-upload>
 
-      <el-table :data="filteredFiles" class="my-custom-table" style="width: 100%" >
+      <el-table :data="filteredFiles.slice(start,start+pageSize)" class="my-custom-table" style="width: 100%" >
         <el-table-column type="index" label="#" width="60"/>
         <el-table-column label="文件类型" width="80">
           <template #default="{ row }">
@@ -92,6 +92,9 @@
           </template>
         </el-table-column>
       </el-table>
+      <div class="py-3 flex justify-center items-center">
+        <el-pagination layout="prev, pager, next" :total="filteredFiles.length" background :page-size="pageSize" v-model:current-page="currentPage" />
+      </div>
     </el-main>
   </el-container>
 </template>
@@ -131,6 +134,9 @@ export default defineComponent({
     Tickets ,
   },
   setup() {
+    const pageSize=ref(3);
+    const currentPage=ref(1);
+    const start = computed(() => (currentPage.value - 1) * pageSize.value);
     const searchQuery: Ref<string> = ref('');
     // const files = ref<File[]>([]);
     const fileschange = ref<File[]>([]);
@@ -301,6 +307,9 @@ export default defineComponent({
       // 这里可以添加逻辑来处理上传错误
     };
     return {
+      pageSize,
+      currentPage,
+      start,
       radio,
       userId,
       projectId,

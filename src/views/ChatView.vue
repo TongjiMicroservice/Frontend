@@ -1,164 +1,118 @@
-
 <template>
-  <div>
-    <!-- 下拉框 -->
-    <el-select v-model="userId" placeholder="请选择 ID">
-      <el-option
-          v-for="id in ids"
-          :key="id"
-          :label="id"
-          :value="id">
-      </el-option>
-    </el-select>
 
-    <!-- 显示选择的 ID -->
-    <div>选择的 ID 是: {{ userId }}</div>
-  </div>
   <div class="chat-app">
-    <!-- 联系人列表 -->
-    <div class="contact-list">
-      <div
-          class="contact"
-          v-for="identityOption in identityOptions"
-          :key="identityOption.contactId"
-          :class="{ 'selected': identityOption.contactId === selectedId }"
-          @click="selectIdentity(identityOption.contactId)"
-      >
-        {{ identityOption.name }}
-      </div>
-    </div>
+<!--    &lt;!&ndash; 联系人列表 &ndash;&gt;-->
+<!--    <div class="contact-list">-->
+<!--      <div-->
+<!--          class="contact"-->
+<!--          v-for="identityOption in identityOptions"-->
+<!--          :key="identityOption.contactId"-->
+<!--          :class="{ 'selected': identityOption.contactId === selectedId }"-->
+<!--          @click="selectContact(identityOption.contactId)"-->
+<!--      >-->
+<!--        {{ identityOption.name }}-->
+<!--      </div>-->
+<!--    </div>-->
 
-    <!-- 消息记录 -->
-    <div class="chat-container">
+<!--    &lt;!&ndash; 消息记录 &ndash;&gt;-->
+<!--    <div class="chat-container">-->
 
-        <div class="message-history">
-          <div v-for="msg in currentChatHistory" :key="msg.timestamp" class="message" :class="{ 'sent': msg.senderId === userId, 'received': msg.senderId !== userId }">
-            {{ msg.senderId }}:<span class="timestamp">{{ new Date(msg.timestamp).toLocaleString() }}</span><br>
-            <div class="message-content">
-              <div class="message-metadata">
-                <!-- 使用符号来表示已读和未读 -->
-                <div>{{ msg.message }}</div>
-              </div>
-            </div>
-            <span class="read-status">{{ msg.isRead ? '✔️' : '🕒' }}</span>
-          </div>
-        </div>
+<!--      <div class="message-history">-->
+<!--        <div v-for="msg in currentChatHistory" :key="msg.timestamp" class="message"-->
+<!--             :class="{ 'sent': msg.senderId === userId, 'received': msg.senderId !== userId }">-->
+<!--          {{ msg.senderId }}:<span class="timestamp">{{ new Date(msg.timestamp).toLocaleString() }}</span><br>-->
+<!--          <div class="message-content">-->
+<!--            <div class="message-metadata">-->
+<!--              &lt;!&ndash; 使用符号来表示已读和未读 &ndash;&gt;-->
+<!--              <div>{{ msg.message }}</div>-->
+<!--            </div>-->
+<!--          </div>-->
+<!--          <span class="read-status">{{ msg.isRead ? '✔️' : '🕒' }}</span>-->
+<!--        </div>-->
+<!--      </div>-->
 
 
-    <!-- 消息容器 -->
-      <div class="message-container">
-        <button @click="toggleEmojiPanel">😀</button>
-        <div v-if="showEmojis" class="emoji-container">
-          <span v-for="(emoji, index) in emojis" :key="index" @click="addEmojiToInput(emoji)">
-            {{ emoji }}
-          </span>
-        </div>
-        <el-input
-            type="textarea"
-            v-model="message"
-            placeholder="请输入消息"
-            class="message-input">
-        </el-input>
-        <el-button color="#626aef" :dark="isDark" @click="sendMessage">发送</el-button>
-      </div>
-  </div>
-    <div class="chat-user-info">
-      <h3>聊天者信息</h3>
-      <div>ID: {{ userId }}</div>
-      <!-- 这里可以添加更多聊天者的信息 -->
-    </div>
+<!--      &lt;!&ndash; 消息容器 &ndash;&gt;-->
+<!--      <div class="message-container">-->
+<!--        <button @click="toggleEmojiPanel">😀</button>-->
+<!--        <div v-if="showEmojis" class="emoji-container">-->
+<!--          <span v-for="(emoji, index) in emojis" :key="index" @click="addEmojiToInput(emoji)">-->
+<!--            {{ emoji }}-->
+<!--          </span>-->
+<!--        </div>-->
+<!--        <el-input-->
+<!--            type="textarea"-->
+<!--            v-model="message"-->
+<!--            placeholder="请输入消息"-->
+<!--            class="message-input">-->
+<!--        </el-input>-->
+<!--        <el-button color="#626aef" :dark="isDark" @click="sendMessage">发送</el-button>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--    <div class="chat-user-info">-->
+<!--      <h3>聊天者信息</h3>-->
+<!--      <div>ID: {{ userId }}</div>-->
+<!--      &lt;!&ndash; 这里可以添加更多聊天者的信息 &ndash;&gt;-->
+<!--    </div>-->
   </div>
 </template>
 <script>
 import io from 'socket.io-client';
 import emojiData from "../emoji.json";
+import {useStore} from "vuex";
+import {ref,computed, defineComponent} from "vue";
+export default defineComponent({
+  setup() {
+const store = useStore();
+const userId = computed(() => store.state.currentUser.id);
+const projectId = computed(() => store.state.currentProjectId);
+const contactId =ref('');
+const currentChatHistory= [];
+const showEmojis=ref('');
+const emojis=emojiData.data.split(',');
 
-export default {
-  data() {
-    return {
-      identityOptions: [
-        { name: "A", contactId: "A" },
-        { name: "B", contactId: "B" },
-    { name: "C", contactId: "C" }
-        // 可以根据需要添加更多选项
-      ],
-      currentChatHistory: [],
-      userId: 'A', // 假设的当前用户ID
-      ids: [...Array(26)].map((_, i) => String.fromCharCode(65 + i)), // 生成从 A 到 Z 的 ID 数组
-      selectedId: 'Z',
-      socket: null,
-      // identity: '',
-      message: '',
-      showEmojis: false,
-      emojis: emojiData.data.split(','),
-    };
-  },
-  mounted() {
-    this.initializeChat();
-    // this.socket = io('http://localhost:9092');
-    //
-    // this.socket.on('messageEvent', (data) => {
-    //   console.log('Message from server:', data);
-    // });
-    //
-    // this.socket.emit('requestRecentChats', this.userId );
-    //
-    // // this.socket.on('recentChatResponse', (data) => {
-    // //   this.identityOptions = data.map(item => {
-    // //     return { name: item.contactId, contactId: item.contactId };
-    // //   });
-    // // });
-    // this.socket.on('recentChatResponse', (data) => {
-    //   this.identityOptions = data.map(item => {
-    //     return { name: item.contactId, contactId: item.contactId };
-    //   });
-    // });
-    // // 前端接收聊天记录并更新界面
-    // this.socket.on('chatHistoryResponse', (data) => {
-    //   this.currentChatHistory = data.map(msg => {
-    //     return {
-    //       senderId: msg.senderId,
-    //       message: msg.message,
-    //       timestamp: msg.timestamp,
-    //       isRead:msg.isRead,
-    //     };
-    //   });
-    // });
 
-  },
-  methods: {
+   const unmounted = () => {
+    console.log("unmounted");
+    this.socket.disconnect();
+  }
     //加载聊天记录
-    loadChatHistory(contactId) {
-      this.socket.emit('fetchChatHistory', { senderId: this.userId, receiverId: this.selectedId });
+    const loadChatHistory=()=>  {
+      this.socket.emit('chatHistoryRequest', this.selectedId);
       this.updateRead(contactId);
-    },
+    }
     //选择联系人
-    selectIdentity(selectedId) {
+    const selectContact=(selectedId)=> {
       this.selectedId = selectedId;
-      console.log("Chat with:",selectedId);
+      console.log("Chat with:", selectedId);
       this.updateRead(selectedId);
-      this.socket.emit('updateReadStatus', {
-        senderId: selectedId,
-        receiverId: this.userId
-      });
+      this.socket.emit('acknowledgeRequest', selectedId);
 
       this.loadChatHistory(selectedId);
 
-    },
-
-    updateRead(selectedId){
-      this.socket.emit('updateReadStatus', {
-        senderId: selectedId,
-        receiverId: this.userId
-      });
-    },
+    }
+    const updateRead=(selectedId)=>{
+      this.socket.emit('acknowledgeRequest', selectedId);
+    }
     //发送信息
-    sendMessage() {
+    const sendMessage=()=> {
       const now = new Date();
       // 格式化时间戳，例如: '2023-03-15T14:20:00Z'
       const timestamp = now.toISOString();
-      console.log("Sending message:", { senderId:this.userId,receiverId: this.selectedId, message: this.message ,timestamp: timestamp,isRead: false});
-      this.socket.emit('messageEvent', { senderId:this.userId,receiverId: this.selectedId, message: this.message ,timestamp: timestamp,isRead: false});
+      console.log("Sending message:", {
+        senderId: this.userId,
+        receiverId: this.selectedId,
+        message: this.message,
+        timestamp: timestamp,
+        isRead: false
+      });
+      this.socket.emit('messageRequest', {
+        senderId: this.userId,
+        receiverId: this.selectedId,
+        message: this.message,
+        timestamp: timestamp,
+        isRead: false
+      });
       // this.socket.emit('simpleMessageEvent', 'Hello, world!');
 
 
@@ -168,18 +122,22 @@ export default {
         message: this.message,
         timestamp: timestamp,
       };
-    //从输入框清除消息
+      //从输入框清除消息
       this.currentChatHistory.push(newMessage);
       this.message = '';
-    },
-    toggleEmojiPanel() {
+    };
+    const toggleEmojiPanel=()=> {
       this.showEmojis = !this.showEmojis;
-    },
-    addEmojiToInput(emoji) {
+    };
+    const addEmojiToInput=() =>{
       this.message += emoji;
       this.showEmojis = false;
-    },
-    initializeChat() {
+    };
+    const initializeChat=()=> {
+
+
+      console.log("正在链接ws");
+
       this.socket = io('http://localhost:9092');
       // this.socket.emit('Authorize', this.userId);
       this.socket.on('messageEvent', (data) => {
@@ -192,22 +150,25 @@ export default {
           this.loadChatHistory(senderId);
         }
       });
-      this.socket.on('readStatusUpdated', (updatedSender) => {
+      //收到消息已读的通知
+      this.socket.on('acknowledgeResponse', (updatedSender) => {
         console.log('Read status updated for messages from:', updatedSender);
 
         // 如果当前选中的聊天对象是更新消息的发送者，重新加载聊天记录
-        if (updatedSender=== this.userId) {
+        if (updatedSender === this.userId) {
           this.loadChatHistory(updatedSender);
         }
       });
-      this.socket.emit('requestRecentChats', this.userId);
-
+      //this.socket.emit('requestRecentChats', this.userId);
+      //收到最近聊天列表的通知
       this.socket.on('recentChatResponse', (data) => {
+        console.log('Recent chats:', data);
         this.identityOptions = data.map(item => {
-          return { name: item.contactId, contactId: item.contactId };
+          console.log(item);
+          return {name: item.name, contactId: item.id};
         });
       });
-
+      //收到聊天记录的通知
       this.socket.on('chatHistoryResponse', (data) => {
         this.currentChatHistory = data.map(msg => {
           return {
@@ -218,16 +179,35 @@ export default {
           };
         });
       });
+      //收到有人上线的通知
+      this.socket.on('loginResponse', (data) => {
+        //data:字符串id
+      });
+      //收到有人下线的通知
+      this.socket.on('logoutResponse', (data) => {
+        //data:字符串id
+      });
+      console.log('Socket connection established.');
+      this.socket.emit('loginRequest', this.userId);
+      this.socket.emit('recentChatRequest', this.userId);
     }
-  },
-  watch: {
-    userId(newUserId, oldUserId) {
-      if (newUserId !== oldUserId) {
-        this.initializeChat();
-      }
-    }
-  },
-};
+    return {
+      userId,
+      projectId,
+      contactId,
+      currentChatHistory,
+      showEmojis,
+      emojis,
+      initializeChat,
+      loadChatHistory,
+      toggleEmojiPanel,
+      addEmojiToInput,
+      sendMessage,
+      updateRead,
+      selectContact,
+    };
+   }
+});
 </script>
 
 <style>
@@ -259,12 +239,14 @@ export default {
 .contact.selected {
   background-color: #b2b2cc; /* 选中时的背景色 */
 }
+
 .chat-container {
   flex-grow: 1; /* 让聊天区域占据剩余空间 */
   display: flex;
   flex-direction: column;
   width: 75%; /* 设置聊天容器的宽度 */
 }
+
 .message-container {
   flex-grow: 1;
   padding: 20px;
@@ -273,6 +255,7 @@ export default {
 .message-input {
   margin-bottom: 20px;
 }
+
 /* ... 现有的 CSS 样式 ... */
 
 .message-history {
@@ -351,6 +334,7 @@ export default {
 .read-status {
   margin-left: 10px;
 }
+
 .emoji-container {
   border: 1px solid #ccc;
   padding: 10px;
@@ -364,6 +348,7 @@ export default {
   cursor: pointer;
   margin: 5px;
 }
+
 .chat-user-info {
 
   width: 250px; /* 调整宽度 */

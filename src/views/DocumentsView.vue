@@ -1,21 +1,37 @@
 <template>
-  <el-container>
+  <el-container >
 
-    <el-header style="text-align: right; padding: 0 20px;">
+    <el-header style="text-align: right; padding: 0 10px;">
+      <el-row>
+        <el-col span="10">
+      <div>
+        <el-radio-group v-model="radio" size="large">
+          <el-radio-button label="显示全部" />
+          <el-radio-button label="已收藏" />
+          <el-radio-button label="未收藏" />
 
+        </el-radio-group>
+      </div>
+        </el-col>
+        <el-col span="4">
+<div class="space"></div>
+        </el-col>
+        <el-col span="8">
       <div class="header-content">
         <!-- 搜索框 -->
         <el-input
             placeholder="搜索文件"
-            style="width: 200px;"
+            style="width: 280px;height:40px"
             v-model="searchQuery"
             class="search-input"
         />
 
-      </div>
+      </div></el-col>
+      </el-row>
+
     </el-header>
     <el-main>
-      <div class="upload-container">
+
         <el-upload
             class="upload-demo "
             drag
@@ -35,7 +51,7 @@
             </div>
           </template>
         </el-upload>
-      </div>
+
       <el-table :data="filteredFiles" class="my-custom-table" style="width: 100%" >
         <el-table-column type="index" label="#" width="60"/>
         <el-table-column label="文件类型" width="80">
@@ -53,7 +69,19 @@
         {{ row.name }}
         </template>
         </el-table-column>
-        <el-table-column prop="size" label="文件大小（KB）" width="140"/>
+        <el-table-column prop="filesize" label="大小（B）" width="100"/>
+        <el-table-column label="星标" width="80">
+          <template #default="{ row }">
+            <el-button type="text" @click="toggleStar(row)">
+              <el-icon v-if="row.starred" :size="20">
+                <star-filled />
+              </el-icon>
+              <el-icon v-else :size="20">
+                <star />
+              </el-icon>
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column prop="uploadTime" label="修改日期" width="240"/>
         <el-table-column prop="userId" label="上传者" width="100"/>
         <el-table-column label="操作" width="480">
@@ -72,20 +100,22 @@
 import { onMounted,defineComponent, reactive, Ref,computed,ref } from 'vue';
 import 'element-plus/dist/index.css';
 import { Document, Delete, Download, FolderOpened ,Tickets,Picture,VideoPlay,Message } from '@element-plus/icons-vue';
-import { UploadFilled } from '@element-plus/icons-vue'
+import { UploadFilled,StarFilled, Star } from '@element-plus/icons-vue'
 import { useStore } from 'vuex';
 import axios from 'axios';
 import Project from "@/models/Project";
 
 
 interface File {
+  id:number;
   userId:number;
   url: string;
   type: string;
   name: string;
-  size: number;
+  filesize: number;
   uploadTime: string;
-  projectId:number;
+  projectId: number;
+  starred: number;
 }
 // const store = useStore();
 //
@@ -105,11 +135,14 @@ export default defineComponent({
     // const files = ref<File[]>([]);
     const fileschange = ref<File[]>([]);
     const files = reactive([
-      { userId:1, projectId:2,url:'aaa',  type: 'pdf' , name: 'Redis学习笔记.pdf', size: 500,uploadTime: '2023-11-23 16:43', },
-      { userId:2, projectId:2,url:'bbb', type: 'txt' , name: 'nginx学习笔记.txt',  size: 600,uploadTime: '2023-11-19 20:17', },
+      { id:333,userId:1, projectId:2,url:'aaa',  type: 'pdf' , name: 'Redis学习笔记.pdf', filesize: 500,uploadTime: '2023-11-23 16:43',starred:1 },
+      { id:666,userId:2, projectId:2,url:'bbb', type: 'txt' , name: 'nginx学习笔记.txt',  filesize: 600,uploadTime: '2023-11-19 20:17', starred:0},
       // 更多文件数据
     ]);
-
+    const starredFiles = computed(() => {
+      return files.filter(file => file.starred === 1);
+    });
+    const radio = ref('显示全部')
     const store=useStore();
     const userId = computed(() => store.state.currentUser.id);
     const projectId=computed(() => store.state.currentProjectId);
@@ -125,16 +158,19 @@ export default defineComponent({
         });
         if (response.data.code === 200 && response.data.list) {
 
-          // console.log(response.data.list)
+           console.log(response.data.list)
           fileschange.value = response.data.list.map((file): File => {
+            console.log("size:"+file.size);
             return {
               userId: file.userId,
               url: file.url,
               type: file.type || 'unknown', // assuming that type is optional and might not be present
               name: file.name,
-              size: file.size,
+              filesize: file.size,
               uploadTime: file.uploadTime,
-              projectId: file.projectId
+              projectId: file.projectId,
+              starred:file.starred,
+              id:file.id,
             };
           });
           console.log(fileschange.value)
@@ -156,13 +192,45 @@ export default defineComponent({
     }
 
 
+    const toggleStar = (file) => {
+      // 这里假设 starred 属性是一个数字，0 表示未星标，1 表示已星标
+      file.starred = file.starred ? 0 : 1;
+      console.log("正在改变")
+      console.log(file.id)
+      axios.patch(`/api/file/star?fileId=${file.id}`)
+          .then(response => {
+            if (response.data.code === 200) {
+              console.log('Star status toggled successfully:', response.data.message);
+              // Handle successful star toggle here
+            } else {
+              console.error('Failed to toggle star status:', response.data.message);
+              // Handle failure here
+            }
+          })
+          .catch(error => {
+            console.error('Error toggling star status:', error);
+            // Handle errors here
+          });
+
+    };
 
     const filteredFiles = computed(() => {
-      if (!searchQuery.value) {
-        return files;
+      // 首先根据收藏状态过滤文件
+      let result = files;
+      if (radio.value === '已收藏') {
+        result = result.filter(file => file.starred === 1);
+      } else if (radio.value === '未收藏') {
+        result = result.filter(file => file.starred === 0);
       }
-      return files.filter(file => file.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
-      console.log(filteredFiles.value)
+
+      // 然后应用搜索查询
+      if (searchQuery.value) {
+        result = result.filter(file =>
+            file.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
+      }
+
+      return result;
     });
 
     const getIconComponent = (type: string) => {
@@ -188,35 +256,7 @@ export default defineComponent({
     const deleteFile = (file: any): void => {
       // 实现文件删除逻辑
       console.log('Deleting', file.name);
-      // const encodedFileName = encodeURIComponent(file.name);
-      // const url = `http://localhost:8090/api/file?fileName=${encodedFileName}`;
-      //
-      // fetch(url, {
-      //   method: 'DELETE',
-      //   headers: {
-      //     'Accept': 'application/json'
-      //   }
-      // })
-      //     .then(response => {
-      //       if (!response.ok) {
-      //         // 抛出错误让catch块可以捕获
-      //         throw new Error('Network response was not ok');
-      //       }
-      //       return response.json();
-      //     })
-      //     .then(data => {
-      //       // 这里处理从服务器接收到的数据
-      //       if (data.code === 200) {
-      //         console.log('成功删除:', data);
-      //         fetchFilesByProject();
-      //       } else {
-      //         console.warn('删除失败:', data);
-      //       }
-      //     })
-      //     .catch(error => {
-      //       // 这里处理错误情况
-      //       console.error('Error during file deletion:', error);
-      //     });
+
       const encodedFileName = encodeURIComponent(file.name);
       const url = `/api/file?fileName=${encodedFileName}`;
 
@@ -261,6 +301,7 @@ export default defineComponent({
       // 这里可以添加逻辑来处理上传错误
     };
     return {
+      radio,
       userId,
       projectId,
       files,
@@ -272,6 +313,7 @@ export default defineComponent({
       deleteFile,
       handleUploadSuccess,
       handleUploadError,
+      toggleStar,
       updateFiles,
       // userId,
       // projectId,
@@ -292,6 +334,9 @@ export default defineComponent({
 }
 .el-table__body-wrapper > tbody > tr {
   background-color: transparent !important;
+}
+.upload-container{
+  height:300px;
 }
 </style>
 

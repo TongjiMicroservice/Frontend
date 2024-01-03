@@ -334,6 +334,36 @@ const filterTask=(type:string)=>{
   }
 }
 
+// const scoreDialogVisible=ref(false)
+// const score=ref(0)
+// const colors = ref(['#99A9BF', '#F7BA2A', '#FF9900'])
+
+const handleTaskJudge=(task:Task,status:number)=>{
+  currentTask.value=task
+  axios({
+    method:'post',
+    url:'/api/task/judge',
+    params:{
+      taskId:task.taskId,
+      status:status
+    }
+  }).then((r)=>{
+    if(r.status===200&&r.data.code===200){
+      ElMessage({
+        message: `审批任务成功`,
+        type: 'success',
+      });
+      getTaskList()
+    }else{
+      ElMessage({
+        message: `审批任务失败，${r.data.message}`,
+        type: 'error',
+      });
+    }
+  })
+}
+
+
 onMounted(() => {
   getTaskList()
 
@@ -363,9 +393,9 @@ onMounted(() => {
       </el-radio-group>
       <el-button class="mr-20" type="primary" @click="createTaskVisible=true">创建任务</el-button>
     </div>
-    <div class="w-full py-4 overflow-auto">
+    <div class="w-full py-4">
       <el-table v-loading="loading" stripe :data="filteredTaskList.slice(start,start+pageSize)" class="w-full">
-        <el-table-column  fixed prop="name" label="名称"></el-table-column>
+        <el-table-column  fixed prop="name" label="名称" width="150"></el-table-column>
         <el-table-column label="状态">
           <template #default="scope">
             <el-tag v-if="scope.row.status===0&&new Date(scope.row.deadline)<new Date()" type="warning">已过期</el-tag>
@@ -374,26 +404,48 @@ onMounted(() => {
             <el-tag v-else-if="scope.row.status===2" type="success">已完成</el-tag>
           </template>
         </el-table-column>
-        <el-table-column  label="截止时间">
+        <el-table-column  label="截止时间" width="180">
           <template #default="scope">
             {{ new Date(scope.row.deadline).toDateString() }}
           </template>
         </el-table-column>
         <el-table-column  prop="leaderName" label="负责人"></el-table-column>
-        <el-table-column  v-if="taskType==='toreview'||taskType==='finished'" prop="score" label="评分"></el-table-column>
-        <el-table-column  v-if="taskType==='toreview'||taskType==='finished'" prop="finishedTime" label="提交时间"></el-table-column>
-        <el-table-column fixed="right" label="操作">
+        <el-table-column width="180"  v-if="taskType==='toreview'||taskType==='finished'" prop="finishedTime"  label="提交时间">
+        </el-table-column>
+        <el-table-column v-if="taskType==='toreview'||taskType==='finished'" label="任务文件" >
           <template #default="scope">
-            <el-button link size="small" @click="handleTaskOpen(scope.row)">
+            <a :href="scope.row.file" style="text-decoration: underline;">{{scope.row.fileName}}</a>
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" width="250" label="操作">
+          <template #default="scope">
+            <el-button type="success" link size="small" @click="handleTaskOpen(scope.row)">
               查看详情
             </el-button>
-            <el-button link size="small" type="danger" @click="deleteTask(scope.row.taskId)">
+            <!-- <el-button link size="small" type="danger" @click="deleteTask(scope.row.taskId)">
               删除任务
-            </el-button>
+            </el-button> -->
+            <el-button @click="handleTaskJudge(scope.row,2)" type="primary" link size="small" v-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()">通过</el-button>
+            <el-button @click="handleTaskJudge(scope.row,0)" type="primary" link size="small" v-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()">拒绝</el-button>
           </template>
         </el-table-column>
       </el-table>
     </div>
+    <!-- <el-dialog
+      v-model="scoreDialogVisible"
+      title="评分"
+      draggable
+    >
+      <el-form>
+        <el-form-item lable="评分">
+          <el-rate v-model="score" :colors="colors" allow-half></el-rate>
+          <span style="color: gold;" class="mx-2">{{score*2}} points</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button type="success">confirm</el-button>
+      </template>
+    </el-dialog> -->
     <el-dialog
       v-model="createTaskVisible"
       title="创建任务"

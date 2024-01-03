@@ -138,7 +138,7 @@ const emojis=emojiData.data.split(',');
 
       console.log("正在链接ws");
 
-      this.socket = io('http://localhost:9092');
+      this.socket = io('http://luxingzhi.cn:9092');
       // this.socket.emit('Authorize', this.userId);
       this.socket.on('messageEvent', (data) => {
         console.log('Message from server:', data);

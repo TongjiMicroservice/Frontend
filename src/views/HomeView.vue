@@ -104,7 +104,7 @@ onMounted(()=>{
       </div>
       <el-col v-else :span="8" v-for="(task,index) in filteredTaskList.slice(start,start+pageSize)" :key="index">
         <div class="p-2">
-          <TaskCard :task="task"/>
+          <TaskCard @submit="getTaskList" :task="task"/>
         </div>
       </el-col>
     </el-row>

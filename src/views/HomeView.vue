@@ -14,8 +14,11 @@ const start=computed(()=>(currentPage.value-1)*pageSize.value)
 
 
 const taskList=ref<Task[]>([])
+const loading=ref(false)
 
 const getTaskList=()=>{
+  taskList.value=[]
+  loading.value=true
   axios({
     method:'get',
     url:'/api/task/list-by-member',
@@ -30,11 +33,13 @@ const getTaskList=()=>{
         taskList.value.push(task)
       }
       filterTask(type.value)
+      loading.value=false
     }else{
       ElMessage({
         message: `获取任务列表失败,${res.data.message}`,
         type: 'error'
       })
+      loading.value=false
     }
   })
 }
@@ -93,7 +98,7 @@ onMounted(()=>{
       </el-radio-group>
     </div>
     
-    <el-row class="py-4">
+    <el-row v-loading="loading" class="py-4">
       <div v-if="filteredTaskList.length===0" class="w-full h-full flex justify-center items-center">
         <p class="font-bold text-3xl" >这里还没有任务</p>
       </div>

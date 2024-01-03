@@ -1,8 +1,8 @@
 <template>
-  <div>
+  <div class="">
     <div class="meeting-table">
     <h1>已开始的会议</h1>
-    <el-table :data="startedMeetings.slice((startedCurrentPage-1)*5,startedCurrentPage*5)"  border stripe>
+    <el-table :data="startedMeetings.slice((startedCurrentPage-1)*4,startedCurrentPage*4)"  border stripe>
       <el-table-column prop="id" label="ID" width="100"></el-table-column>
       <el-table-column prop="title" label="Title" width="200"></el-table-column>
       <el-table-column prop="url" label="URL" width="200"></el-table-column>
@@ -17,14 +17,14 @@
     <el-pagination
       @current-change="handleCurrentChange1"
       :current-page="startedCurrentPage"
-      :page-size="5"
+      :page-size="4"
       layout="prev, pager, next"
       :total="startedMeetings.length">
      </el-pagination>
     </div>
     <div class="meeting-table">
     <h1>待参加的会议</h1>
-    <el-table :data="upcomingMeetings.slice((upcomingCurrentPage-1)*5,upcomingCurrentPage*5)"  border stripe>
+    <el-table :data="upcomingMeetings.slice((upcomingCurrentPage-1)*4,upcomingCurrentPage*4)"  border stripe>
       <el-table-column prop="id" label="ID" width="100" ></el-table-column>
       <el-table-column prop="title" label="Title" width="200"></el-table-column>
       <el-table-column prop="url" label="URL" width="200"></el-table-column>
@@ -39,7 +39,7 @@
     <el-pagination
       @current-change="handleCurrentChange2"
       :current-page="upcomingCurrentPage"
-      :page-size="5"
+      :page-size="4"
       layout="prev, pager, next"
       :total="upcomingMeetings.length">
      </el-pagination>
@@ -50,7 +50,7 @@
     <el-select v-model="selectedMembers" multiple placeholder="请选择参会人">
       <el-option v-for="member in members" :key="member.userId" :label="member.name" :value="member.userId"></el-option>
     </el-select>
-    <el-button type="primary" @click="addParticipants">添加</el-button>
+    <el-button class="mx-2" type="primary" @click="addParticipants">添加</el-button>
 
     <el-table :data="meetingParticipants" style="width: 100%">
       <el-table-column prop="name" label="成员姓名">
@@ -60,7 +60,7 @@
       </el-table-column>
       <el-table-column label="操作">
         <template #default="{ row }">
-          <el-button type="primary" @click="setHost(row)" :pressed="row.role === 'host'">主持人</el-button>
+          <el-button class="px-2" type="primary" @click="setHost(row)" :pressed="row.role === 'host'">赋予主持人</el-button>
           <el-button type="danger" @click="deleteParticipant(row.meeting_id, row.participant_id)">删除</el-button>
         </template>
       </el-table-column>

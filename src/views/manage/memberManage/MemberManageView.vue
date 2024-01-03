@@ -117,6 +117,39 @@ const handlePrivilege=(userId:number,privilege:number)=>{
   })
 }
 
+const addMemberDialogVisible=ref(false)
+
+const searchEmail=ref('')
+
+const addMember=()=>{
+    axios({
+        method:'post',
+        url:'/api/project/member/add-by-email',
+        params:{
+            projectId:store.state.currentProjectId,
+            email:searchEmail.value
+        }
+    }).then((res)=>{
+        if(res.status===200&&res.data.code===200){
+            ElMessage({
+                message: `邀请成功`,
+                type: 'success',
+            });
+            addMemberDialogVisible.value=false
+            getCurrentProjectMembers()
+        }else{
+            ElMessage({
+                message: `邀请失败，${res.data.message}`,
+                type: 'error',
+            });
+        }
+    })
+}
+
+const handleAddMemberOpen=()=>{
+    addMemberDialogVisible.value=true
+}
+
 onMounted(()=>{
     getCurrentProjectMembers()
 })
@@ -124,15 +157,33 @@ onMounted(()=>{
 
 <template>
     <div class="w-full h-full p-2 pt-10">
-        <el-radio-group
-            v-model="view"
-            class="pl-1"
-            @change="filterMember(view)"
-        >
-            <el-radio-button label="all">全部</el-radio-button>
-            <el-radio-button label="member">成员</el-radio-button>
-            <el-radio-button label="admin">管理员</el-radio-button>
-        </el-radio-group>
+        <div class="flex justify-between pr-5">
+            <el-radio-group
+                v-model="view"
+                class="pl-1"
+                @change="filterMember(view)"
+            >
+                <el-radio-button label="all">全部</el-radio-button>
+                <el-radio-button label="member">成员</el-radio-button>
+                <el-radio-button label="admin">管理员</el-radio-button>
+            </el-radio-group>
+            <el-button @click="handleAddMemberOpen" type="success">邀请新成员</el-button>
+            <el-dialog
+                v-model="addMemberDialogVisible"
+                title="邀请新成员"
+            >
+                <el-form>
+                    <el-form-item label="邮箱">
+                        <el-input v-model="searchEmail" placeholder="请输入用户邮箱"></el-input>
+                    </el-form-item>
+                </el-form>
+                <template #footer>
+                    <el-button @click="addMemberDialogVisible=false">取消</el-button>
+                    <el-button type="primary" @click="addMember">确定</el-button>
+                </template>
+            </el-dialog>
+        </div>
+        
         <el-table v-loading="loading" stripe :data="filteredMembers.slice(start,start+pageSize)" class="w-full mt-5">
             <el-table-column prop="userId" label="用户ID"></el-table-column>
             <el-table-column prop="username" label="用户名"></el-table-column>

@@ -69,7 +69,7 @@ const getTaskMembers=(taskId:number)=>{
   currentTaskMembers.value=[]
   axios({
     method:'get',
-    url:'/api/task/member/get',
+    url:'/api/task/members',
     params:{
       taskId:taskId
     }
@@ -122,7 +122,7 @@ const handleUploadSuccess = (response: any, file: any, fileList: any) => {
 const submitTask=(fileData:any)=>{
   axios({
     method:'put',
-    url:'/api/task/member/upload',
+    url:'/api/task/file',
     params:{
       taskId:props.task.taskId,
       fileURL:fileData.url

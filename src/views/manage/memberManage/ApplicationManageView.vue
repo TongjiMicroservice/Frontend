@@ -45,7 +45,6 @@ import { useStore } from 'vuex';
 import Application from '@/models/Application';
 import axios from 'axios';
 import { ElMessage } from 'element-plus';
-import { fi } from 'element-plus/es/locale/index.mjs';
 
 const pageSize = ref(6);
 const currentPage = ref(1);

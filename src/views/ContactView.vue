@@ -169,7 +169,7 @@ export default defineComponent({
     };
     const fetchMembers = async () => {
       try {
-        const response = await axios.get('/api/project/member/get', {
+        const response = await axios.get('/api/project/members', {
           params: {projectId: projectId.value} // replace with the actual project ID you need
         });
         if (response.data && response.data.members) {
@@ -227,7 +227,7 @@ export default defineComponent({
       console.log("正在尝试删除")
       console.log( userId);
       try {
-        const response = await axios.delete('/api/project/member/delete', {
+        const response = await axios.delete('/api/project/member', {
           params: {
             projectId: projectId.value,
             userId: userId,
@@ -242,7 +242,7 @@ export default defineComponent({
     };
     const changePrivilege = async () => {
       try {
-        const response = await axios.patch('/api/project/privilege/update', null, {
+        const response = await axios.patch('/api/project/privilege', null, {
           params: {
             projectId: projectId.value, // 你需要替换为实际的projectId
             userId:  currentUserId.value, // 你需要替换为实际操作的userId

@@ -180,7 +180,7 @@
     console.log(userPassword.value)
     axios({
       method: 'patch',
-      url: '/api/user/update',
+      url: '/api/user/info',
       params: {
         username: userName.value,
         email: userEmail.value,

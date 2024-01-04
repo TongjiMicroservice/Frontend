@@ -58,7 +58,7 @@ const getTaskMembers=(taskId:number)=>{
   currentTaskMembers.value=[]
   axios({
     method:'get',
-    url:'/api/task/member/get',
+    url:'/api/task/members',
     params:{
       taskId:taskId
     }
@@ -130,7 +130,7 @@ const getTaskList = ():Promise<Boolean> => {
 const getCurrentProjectMembers=()=>{
   axios({
     method:'get',
-    url:'/api/project/member/get',
+    url:'/api/project/members',
     params:{
       projectId:store.state.currentProjectId
     }
@@ -214,7 +214,7 @@ const removeTaskMember=(id:number)=>{
 const deleteTask=(taskId:number)=>{
   axios({
     method:'delete',
-    url:'/api/task/delete',
+    url:'/api/task',
     params:{
       taskId:taskId
     }
@@ -240,7 +240,7 @@ const addAllTaskMember=()=>{
   const promises = toAddMembers.value.map((member) => {
     return axios({
       method: 'post',
-      url: '/api/task/member/add',
+      url: '/api/task/member',
       params: {
         taskId: currentTask.value.taskId,
         memberId: member.userId
@@ -273,7 +273,7 @@ const createTaskVisible=ref(false)
 const createTask=()=>{
   axios({
     method:'post',
-    url:'/api/task/create',
+    url:'/api/task',
     params:{
       projectId:store.state.currentProjectId,
       name:currentTask.value.name,

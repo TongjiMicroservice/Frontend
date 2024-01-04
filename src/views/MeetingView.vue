@@ -150,7 +150,7 @@ export default defineComponent({
       //弹出创建窗口逻辑---role判断
       axios({
         method:'get',
-        url:`/api/project/privilege/get`,
+        url:`/api/project/privilege`,
         params:{
           projectId:store.state.currentProjectId,
           userId:store.state.currentUser.id
@@ -190,7 +190,7 @@ export default defineComponent({
 
       axios({
         method:'get',
-        url:'/api/project/member/get',
+        url:'/api/project/members',
         params:{
           projectId:store.state.currentProjectId
         }
@@ -292,7 +292,7 @@ export default defineComponent({
     };
 
     const cancelMeeting = (meetingId: string) => {
-      axios.delete(`http://luxingzhi.cn:8090/api/meeting/${meetingId}`)
+      axios.delete(`/api/meeting/${meetingId}`)
         .then((response) => {
           // 处理取消会议成功的逻辑
           fetchMeetings(); // 重新获取会议列表

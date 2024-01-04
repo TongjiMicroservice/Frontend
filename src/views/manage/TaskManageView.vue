@@ -425,8 +425,8 @@ onMounted(() => {
             <!-- <el-button link size="small" type="danger" @click="deleteTask(scope.row.taskId)">
               删除任务
             </el-button> -->
-            <el-button @click="handleTaskJudge(scope.row,2)" type="primary" link size="small" v-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()">通过</el-button>
-            <el-button @click="handleTaskJudge(scope.row,0)" type="primary" link size="small" v-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()">拒绝</el-button>
+            <el-button @click="handleTaskJudge(scope.row,2)" type="primary" link size="small" v-if="scope.row.status===1">通过</el-button>
+            <el-button @click="handleTaskJudge(scope.row,0)" type="primary" link size="small" v-if="scope.row.status===1">拒绝</el-button>
           </template>
         </el-table-column>
       </el-table>

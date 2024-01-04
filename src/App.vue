@@ -52,7 +52,7 @@ const getProjectList=async ():Promise<boolean>=>{
 const getRole=async (projectId:number)=>{
   axios({
     method:'get',
-    url:'/api/project/privilege/get',
+    url:'/api/project/privilege',
     params:{
       userId:store.state.currentUser.id,
       projectId:projectId

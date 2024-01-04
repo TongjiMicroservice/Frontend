@@ -47,7 +47,7 @@ const getCurrentProjectMembers=()=>{
   currentProjectMembers.value=[]
   axios({
     method:'get',
-    url:'/api/project/member/get',
+    url:'/api/project/members',
     params:{
       projectId:store.state.currentProjectId
     }
@@ -95,7 +95,7 @@ const loading=ref(false)
 const handlePrivilege=(userId:number,privilege:number)=>{
   axios({
     method:'patch',
-    url:'/api/project/privilege/update',
+    url:'/api/project/privilege',
     params:{
       projectId:store.state.currentProjectId,
       userId:userId,

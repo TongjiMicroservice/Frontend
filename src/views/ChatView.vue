@@ -85,8 +85,9 @@ import { ElMenu, ElMenuItem, ElAvatar } from 'element-plus';
 import {useStore} from "vuex";
 import { useRoute } from 'vue-router';
 import axios from "axios";
+import * as constants from "constants";
 interface ChatMessage {
-  sender: number;
+  sender: string;
   sendername?: string;
   receiver:number;
   message: string;
@@ -99,25 +100,29 @@ export default defineComponent({
     const SERVER_URL = 'http://luxingzhi.cn:9092';
     const intervalId = ref(null);
     const store=useStore();
-    const userId = computed(() => store.state.currentUser.id);
+    const userId = computed(() => String(store.state.currentUser.id));
     const userName=computed(() => store.state.currentUser.name);
     console.log("当前登录用户"+userId.value);
     const contacts = ref([
-      { id: 1, name: 'Alice', avatar: 'path/to/alice-avatar.png' },
-      { id: 2, name: 'Bob', avatar: 'path/to/bob-avatar.png' },
-      { id: 3, name: 'Carol', avatar: 'path/to/carol-avatar.png' },
+      { id: '2', name: 'Bob', avatar: 'path/to/bob-avatar.png' },
+      { id: '3', name: 'Carol', avatar: 'path/to/carol-avatar.png' },
       // 更多联系人...
     ] );
+    const contactsName = ref([
+      { id: '2', name: 'Bob', avatar: 'path/to/bob-avatar.png' },
+      { id: '3', name: 'Carol', avatar: 'path/to/carol-avatar.png' },
+    ]);
     const activeContactId = ref(1);
     const inputMessage = ref('');
     const chatHistory: Ref<ChatMessage[]> = ref([
-      { sender: 123, message: '你好！', timestamp: '2023-3-23T11:00:00', isRead: false },
-      { sender: 456, message: '你好，Alice！', timestamp: '2023-3-23T12:00:00', isRead: false },
+      { sender: '123', message: '你好！', timestamp: '2023-3-23T11:00:00', isRead: false },
+      { sender: '456', message: '你好，Alice！', timestamp: '2023-3-23T12:00:00', isRead: false },
       // 更多消息...
     ]);
     const route = useRoute();
     // 你可以直接在setup中使用 route.params.userId 或者作为响应式引用
-    const beginchatId = ref(route.params.userId|| 1);
+    const beginchatId = ref(String(route.params.userId|| 1));
+    console.log(beginchatId.value)
     const showEmojis = ref(false);
     // 定义切换表情面板的函数
     const toggleEmojiPanel = () => {
@@ -132,14 +137,17 @@ export default defineComponent({
     const populateSenderNames = () => {
       chatHistory.value = chatHistory.value.map((message) => {
         let senderName; // Declare a variable to hold the sender name
-
+        console.log(contactsName.value);
+        console.log(contacts.value);
+        console.log("消息发送者:%s\n" , message.sender);
         if (message.sender === userId.value) {
           // If the sender ID matches the current user ID, use the current user's name
           senderName = userName.value;
         } else {
           // Otherwise, find the matching contact name from the contacts array
           const contact = contacts.value.find((contact) => contact.id === message.sender);
-          senderName = contact ? contact.name : 'Unknown'; // If no contact is found, use 'Unknown'
+          const contact2 = contactsName.value.find((contact) => contact.id === message.sender);
+          senderName = contact ? contact.name : contact2 ? contact2.name : "unknown"; // If no contact is found, use 'Unknown'
         }
 
         // Return the new message object with the sender name included
@@ -153,7 +161,7 @@ export default defineComponent({
 
     const fetchUserDetails = async (userId: number) => {
       try {
-        const response = await axios.get(`/api/user/info?userId=${userId}`);
+        const response = await axios.get(`/api/user/info?userId=${+userId}`);
         if (response.data.code === 200) {
           // console.log(response.data);
           const { userId: id, username: name, avatar } = response.data;
@@ -174,7 +182,7 @@ export default defineComponent({
         // console.log(data);
         chatHistory.value = data.map(msg => {
           return {
-            sender: +msg.sender,
+            sender: msg.sender,
             message: msg.message,
             timestamp: msg.timestamp,
             isRead: msg.isRead,
@@ -190,25 +198,43 @@ export default defineComponent({
       loadChatHistory();
     }, 5000);
     const socket = io(SERVER_URL);
+    console.log('userid:'+userId.value)
     socket.emit('loginRequest', userId.value);
     watch(() => route.params.userId, (newUserId) => {
-      beginchatId.value = newUserId;
+      beginchatId.value = String(newUserId);
+
 
     });
     const loadChatPerson=()=>{
       socket.emit('recentChatRequest', userId.value);
       console.log('开始查询最近联系人');
-      socket.on('recentChatResponse', (data) => {
-        // console.log('最近联系人数据', data);
-        contacts.value = data.map(item => {
-
-          return { name: item.name, id:+item.id,avatar:item.avatar };
+      socket.on('groupNameResponse' , (data) =>{
+        contactsName.value = data.map(item => {
+          console.log("群聊成员：%s，%s",item.name,item.id);
+          return { name: item.name, id:item.id,avatar:item.avatar};
         });
       });
-    }
+      socket.on('recentChatResponse', (data) => {
 
+        contacts.value = data.map(item => {
+
+          return { name: item.name, id:item.id,avatar:item.avatar };
+
+        });
+      });
+
+
+    }
+    console.log('最近联系人数据',  contacts.value);
     onMounted(() => {
       console.log("发起和"+beginchatId.value+"的聊天");
+      fetchUserDetails(beginchatId.value);
+
+      console.log(contacts.value)
+      loadChatHistory();
+      loadChatPerson();
+      console.log(contacts.value);
+      console.log(beginchatId.value);
       const existingContact = contacts.value.find(contact => contact.id === beginchatId.value);
 
       // 如果不存在，则发送初始会话消息
@@ -233,9 +259,6 @@ export default defineComponent({
           isRead: false,
         });
       }
-      console.log(beginchatId.value)
-      fetchUserDetails(beginchatId.value);
-      console.log(contacts.value)
       loadChatHistory();
       loadChatPerson();
     });
@@ -246,6 +269,7 @@ export default defineComponent({
       // 如果当前选中的聊天对象是更新消息的发送者，重新加载聊天记录
       if (updatedSender === activeContactId.value) {
         loadChatHistory();
+
       }
     });
     socket.on('loginResponse', (data) => {
@@ -293,7 +317,7 @@ export default defineComponent({
           receiver:activeContactId.value,
           message: inputMessage.value,
           timestamp:timestamp,
-          isRead: false,
+          isRead: activeContactId.value[0] === 'g',
         });
 
         //从输入框清除消息
@@ -331,6 +355,7 @@ export default defineComponent({
       SERVER_URL,
       intervalId,
       populateSenderNames,
+      contactsName,
     };
   },
 });

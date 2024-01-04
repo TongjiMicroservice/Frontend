@@ -10,7 +10,7 @@
             :class="{ 'is-active': activeContactId === contact.id }"
         >
           <div class="contact-item">
-            <el-avatar class="avatar">{{ contact.name }}</el-avatar>
+            <el-avatar class="avatar">{{ contact.name.toUpperCase()[0] }}</el-avatar>
             <div v-if="contact" class="contact-info">
               <p class="name">{{ contact.name }}</p>
             </div>

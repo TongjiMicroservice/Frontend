@@ -96,7 +96,7 @@ interface ChatMessage {
 }
 export default defineComponent({
   setup() {
-    const SERVER_URL = 'http://localhost:9092';
+    const SERVER_URL = 'http://luxingzhi.cn:9092';
     const intervalId = ref(null);
     const store=useStore();
     const userId = computed(() => store.state.currentUser.id);

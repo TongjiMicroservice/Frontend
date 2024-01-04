@@ -69,7 +69,7 @@ const getTaskMembers=(taskId:number)=>{
   currentTaskMembers.value=[]
   axios({
     method:'get',
-    url:'/api/task/member/get',
+    url:'/api/task/members',
     params:{
       taskId:taskId
     }
@@ -122,7 +122,7 @@ const handleUploadSuccess = (response: any, file: any, fileList: any) => {
 const submitTask=(fileData:any)=>{
   axios({
     method:'put',
-    url:'/api/task/member/upload',
+    url:'/api/task/file',
     params:{
       taskId:props.task.taskId,
       fileURL:fileData.url
@@ -202,7 +202,7 @@ onMounted(()=>{
         <div class="pr-3 font-bold">状态：</div>
         <el-tag type="warning" class="p-1" v-if="task.status===0&&new Date(task.deadline)<new Date()">已过期</el-tag>
         <el-tag type="danger" class="p-1" v-if="task.status===0&&new Date(task.deadline)>new Date()">未完成</el-tag>
-        <el-tag type="primary" class="p-1" v-if="task.status===1&&new Date(task.deadline)>new Date()">待审批</el-tag>
+        <el-tag type="primary" class="p-1" v-if="task.status===1">待审批</el-tag>
         <el-tag type="success" class="p-1" v-if="task.status===2">已完成</el-tag>
     </div>
   </div>

@@ -104,6 +104,7 @@ const getApplications = ()=>{
                 type: 'success'
             })
             loading.value=false
+            filterApplication(view.value)
         }else{
             ElMessage({
                 message: `获取申请列表失败,${res.data.message}`,

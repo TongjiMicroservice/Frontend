@@ -10,7 +10,7 @@
             :class="{ 'is-active': activeContactId === contact.id }"
         >
           <div class="contact-item">
-            <el-avatar class="avatar" :src="contact.avatar"></el-avatar>
+            <el-avatar class="avatar">{{ contact.name.toUpperCase()[0] }}</el-avatar>
             <div v-if="contact" class="contact-info">
               <p class="name">{{ contact.name }}</p>
             </div>
@@ -97,7 +97,7 @@ interface ChatMessage {
 }
 export default defineComponent({
   setup() {
-    const SERVER_URL = 'http://localhost:9092';
+    const SERVER_URL = 'http://luxingzhi.cn:9092';
     const intervalId = ref(null);
     const store=useStore();
     const userId = computed(() => String(store.state.currentUser.id));

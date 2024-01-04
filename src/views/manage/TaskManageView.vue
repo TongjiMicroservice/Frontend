@@ -58,7 +58,7 @@ const getTaskMembers=(taskId:number)=>{
   currentTaskMembers.value=[]
   axios({
     method:'get',
-    url:'/api/task/member/get',
+    url:'/api/task/members',
     params:{
       taskId:taskId
     }
@@ -130,7 +130,7 @@ const getTaskList = ():Promise<Boolean> => {
 const getCurrentProjectMembers=()=>{
   axios({
     method:'get',
-    url:'/api/project/member/get',
+    url:'/api/project/members',
     params:{
       projectId:store.state.currentProjectId
     }
@@ -214,7 +214,7 @@ const removeTaskMember=(id:number)=>{
 const deleteTask=(taskId:number)=>{
   axios({
     method:'delete',
-    url:'/api/task/delete',
+    url:'/api/task',
     params:{
       taskId:taskId
     }
@@ -240,7 +240,7 @@ const addAllTaskMember=()=>{
   const promises = toAddMembers.value.map((member) => {
     return axios({
       method: 'post',
-      url: '/api/task/member/add',
+      url: '/api/task/member',
       params: {
         taskId: currentTask.value.taskId,
         memberId: member.userId
@@ -273,7 +273,7 @@ const createTaskVisible=ref(false)
 const createTask=()=>{
   axios({
     method:'post',
-    url:'/api/task/create',
+    url:'/api/task',
     params:{
       projectId:store.state.currentProjectId,
       name:currentTask.value.name,
@@ -325,7 +325,7 @@ const filterTask=(type:string)=>{
     })
   }else if(type==='toreview'){
     filteredTaskList.value=taskList.value.filter((task)=>{
-      return task.status===1&&new Date(task.deadline)>new Date()
+      return task.status===1
     })
   }else if(type==='finished'){
     filteredTaskList.value=taskList.value.filter((task)=>{
@@ -400,7 +400,7 @@ onMounted(() => {
           <template #default="scope">
             <el-tag v-if="scope.row.status===0&&new Date(scope.row.deadline)<new Date()" type="warning">已过期</el-tag>
             <el-tag v-else-if="scope.row.status===0&&new Date(scope.row.deadline)>new Date()" type="danger">未完成</el-tag>
-            <el-tag v-else-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()" type="primary">待审批</el-tag>
+            <el-tag v-else-if="scope.row.status===1" type="primary">待审批</el-tag>
             <el-tag v-else-if="scope.row.status===2" type="success">已完成</el-tag>
           </template>
         </el-table-column>
@@ -425,8 +425,8 @@ onMounted(() => {
             <!-- <el-button link size="small" type="danger" @click="deleteTask(scope.row.taskId)">
               删除任务
             </el-button> -->
-            <el-button @click="handleTaskJudge(scope.row,2)" type="primary" link size="small" v-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()">通过</el-button>
-            <el-button @click="handleTaskJudge(scope.row,0)" type="primary" link size="small" v-if="scope.row.status===1&&new Date(scope.row.deadline)>new Date()">拒绝</el-button>
+            <el-button @click="handleTaskJudge(scope.row,2)" type="primary" link size="small" v-if="scope.row.status===1">通过</el-button>
+            <el-button @click="handleTaskJudge(scope.row,0)" type="primary" link size="small" v-if="scope.row.status===1">拒绝</el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -160,7 +160,7 @@ const createSchedule = () => {
   }
   axios({
     method: 'post',
-    url: '/api/schedule/create',
+    url: '/api/schedule',
     params: {
       startTime: startTime.value,
       deadline: endTime.value,
@@ -194,7 +194,7 @@ const createSchedule = () => {
 const getSchedule = () => {
   axios({
     method: 'get',
-    url: '/api/schedule/get',
+    url: '/api/schedule',
   })
     .then((r) => {
       if (r.status === 200 && r.data.code === 200) {

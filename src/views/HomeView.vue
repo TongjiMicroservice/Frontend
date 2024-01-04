@@ -59,7 +59,7 @@ const filterTask=(type:string)=>{
     })
   }else if(type==='toreview'){
     filteredTaskList.value=taskList.value.filter((task)=>{
-      return task.status===1&&new Date(task.deadline)>new Date()
+      return task.status===1
     })
   }else if(type==='finished'){
     filteredTaskList.value=taskList.value.filter((task)=>{

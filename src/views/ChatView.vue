@@ -32,7 +32,7 @@
 
           <div v-for="msg in chatHistory" :key="msg.timestamp" class="message"
                :class="{ 'sent': msg.sender === userId, 'received': msg.sender !== userId }">
-            {{ msg.sender }}:<span class="timestamp">{{ msg.timestamp }}</span><br>
+            {{ msg.sendername }}:<span class="timestamp">{{ msg.timestamp }}</span><br>
             <div class="message-content">
               <div class="message-metadata">
                 <!-- 使用符号来表示已读和未读 -->
@@ -46,12 +46,31 @@
 
         <el-footer style="height: auto; padding: 10px;">
           <!-- 聊天输入区域 -->
-          <el-input
-              type="textarea"
-              v-model="inputMessage"
-              placeholder="输入消息..."
-          ></el-input>
+<!--          <el-input-->
+<!--              type="textarea"-->
+<!--              v-model="inputMessage"-->
+<!--              placeholder="输入消息..."-->
+<!--          ></el-input>-->
+          <div class="chat-input-area">
+            <!-- 表情按钮 -->
+            <button @click="toggleEmojiPanel">😀</button>
+
+            <!-- 表情面板 -->
+            <div v-if="showEmojis" class="emoji-container">
+               <span v-for="(emoji, index) in emojis" :key="index" @click="addEmojiToInput(emoji)">
+              {{ emoji }}
+                 </span>
+            </div>
+
+            <!-- 输入框 -->
+            <el-input
+                type="textarea"
+                v-model="inputMessage"
+                placeholder="输入消息..."
+            ></el-input>
+
           <el-button color="#626aef" :dark="isDark" @click="sendMessage">发送</el-button>
+          </div>
         </el-footer>
       </el-container>
     </el-col>
@@ -68,6 +87,7 @@ import { useRoute } from 'vue-router';
 import axios from "axios";
 interface ChatMessage {
   sender: number;
+  sendername?: string;
   receiver:number;
   message: string;
   timestamp: string;
@@ -76,9 +96,11 @@ interface ChatMessage {
 }
 export default defineComponent({
   setup() {
-    const SERVER_URL = 'http://luxingzhi.cn:9092';
+    const SERVER_URL = 'http://localhost:9092';
+    const intervalId = ref(null);
     const store=useStore();
     const userId = computed(() => store.state.currentUser.id);
+    const userName=computed(() => store.state.currentUser.name);
     console.log("当前登录用户"+userId.value);
     const contacts = ref([
       { id: 1, name: 'Alice', avatar: 'path/to/alice-avatar.png' },
@@ -96,7 +118,37 @@ export default defineComponent({
     const route = useRoute();
     // 你可以直接在setup中使用 route.params.userId 或者作为响应式引用
     const beginchatId = ref(route.params.userId|| 1);
+    const showEmojis = ref(false);
+    // 定义切换表情面板的函数
+    const toggleEmojiPanel = () => {
+      showEmojis.value = !showEmojis.value;
+    };
 
+    // 定义添加表情到输入框的函数
+    const addEmojiToInput = (emoji: string) => {
+      inputMessage.value += emoji; // 直接修改响应式变量的值
+      showEmojis.value = false;
+    };
+    const populateSenderNames = () => {
+      chatHistory.value = chatHistory.value.map((message) => {
+        let senderName; // Declare a variable to hold the sender name
+
+        if (message.sender === userId.value) {
+          // If the sender ID matches the current user ID, use the current user's name
+          senderName = userName.value;
+        } else {
+          // Otherwise, find the matching contact name from the contacts array
+          const contact = contacts.value.find((contact) => contact.id === message.sender);
+          senderName = contact ? contact.name : 'Unknown'; // If no contact is found, use 'Unknown'
+        }
+
+        // Return the new message object with the sender name included
+        return {
+          ...message,
+          sendername: senderName,
+        };
+      });
+    };
 
 
     const fetchUserDetails = async (userId: number) => {
@@ -106,7 +158,6 @@ export default defineComponent({
           // console.log(response.data);
           const { userId: id, username: name, avatar } = response.data;
           contacts.value.push({ id, name, avatar });
-          console.log(contacts.value)
           return response.data; // 返回用户详细信息
 
         }
@@ -129,11 +180,13 @@ export default defineComponent({
             isRead: msg.isRead,
           };
         });
+        populateSenderNames();
         console.log(chatHistory.value);
       });
+
       // updateRead(contactId);
     };
-    setInterval(() => {
+    intervalId.value=setInterval(() => {
       loadChatHistory();
     }, 5000);
     const socket = io(SERVER_URL);
@@ -142,16 +195,19 @@ export default defineComponent({
       beginchatId.value = newUserId;
 
     });
-    onMounted(() => {
+    const loadChatPerson=()=>{
       socket.emit('recentChatRequest', userId.value);
       console.log('开始查询最近联系人');
       socket.on('recentChatResponse', (data) => {
-        console.log('最近联系人数据', data);
+        // console.log('最近联系人数据', data);
         contacts.value = data.map(item => {
 
-          return { name: item.name, id: item.id,avatar:item.avatar };
+          return { name: item.name, id:+item.id,avatar:item.avatar };
         });
       });
+    }
+
+    onMounted(() => {
       console.log("发起和"+beginchatId.value+"的聊天");
       const existingContact = contacts.value.find(contact => contact.id === beginchatId.value);
 
@@ -177,8 +233,11 @@ export default defineComponent({
           isRead: false,
         });
       }
+      console.log(beginchatId.value)
       fetchUserDetails(beginchatId.value);
+      console.log(contacts.value)
       loadChatHistory();
+      loadChatPerson();
     });
 
     socket.on('acknowledgeResponse', (updatedSender) => {
@@ -202,7 +261,7 @@ export default defineComponent({
     onUnmounted(() => {
       // 组件卸载时清理
       socket.off('recentChatResponse');
-      clearInterval(intervalId);
+      clearInterval(intervalId.value);
       socket.close();
     });
     // onMounted();
@@ -251,8 +310,13 @@ export default defineComponent({
       loadChatHistory();
     };
     return{
+      showEmojis,
+      emojis: emojiData.data.split(','),
+      toggleEmojiPanel,
+      addEmojiToInput,
       socket,
       userId,
+      userName,
       contacts,
       activeContactId,
       currentContact,
@@ -263,7 +327,10 @@ export default defineComponent({
       beginchatId,
       fetchUserDetails,
       loadChatHistory,
+      loadChatPerson,
       SERVER_URL,
+      intervalId,
+      populateSenderNames,
     };
   },
 });
@@ -344,5 +411,25 @@ export default defineComponent({
 .sent .message-content {
   background-color:rgba(66,154,155,0.2);/* 标识气泡颜色  */
 }
+.read-status {
+  margin-left: 10px;
+}
 
+.emoji-container {
+  border: 1px solid #ccc;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  position: absolute; /* 或其他位置调整 */
+  z-index: 1000; /* 确保在输入框上方 */
+  max-height: 80px; /* 或您想要的任何高度 */
+  overflow-y: auto; /* 添加滚动条 */
+
+  transform: translateY(100%); /* 将表情面板向上移动自身的高度 */
+}
+
+.emoji-container span {
+  cursor: pointer;
+  margin: 5px;
+}
 </style>

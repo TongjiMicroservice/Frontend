@@ -19,40 +19,11 @@
               </template>
             </el-popover>
           </span>
-
-          <el-button v-if="currentUserRole==='leader'" @click="preparePrivilegeChange(member.userId)">更改权限</el-button>
-          <el-dialog
-              title="更改权限"
-              v-model="showDialog"
-              width="30%"
-          >
-            <el-select
-                v-model="privilegeValue"
-            >
-              <el-option v-for="(item,index) in privilegeOtions" :key="index" :label="item.label" :value="item.value">
-              </el-option>
-            </el-select>
-            <template #footer>
-              <span class="dialog-footer">
-                <el-button @click="closeDialog">取消</el-button>
-                <el-button type="primary" @click="confirmPrivilege">确认</el-button>
-              </span>
-            </template>
-          </el-dialog>
-          <el-button v-if="currentUserRole==='leader'" @click="deleteUser(member.userId)">删除</el-button>
-          <el-button @click="goToChat(member.userId)">聊天</el-button>
+          <el-button @click="goToChat(member.userId)" class="mx-10">聊天</el-button>
         </div>
       </el-col>
     </el-row>
     <div class="space"></div>
-    <el-button
-        size="large"
-        type="success"
-        class="invite-button"
-        @click="dialogVisible = true"
-    >
-      邀请新成员
-    </el-button>
     <el-dialog :model-value="dialogVisible" title="Enter Email" @update:model-value="dialogVisible = $event">
       <el-input
           v-model="email"

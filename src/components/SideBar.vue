@@ -17,7 +17,7 @@ const role=computed(()=>store.state.role)
       router
     >
       <el-menu-item index="/person">
-        <el-avatar :size="25">{{ store.state.currentUser.name }}</el-avatar>
+        <el-avatar :size="25">{{ store.state.currentUser.name.toUpperCase()[0] }}</el-avatar>
         <template #title>个人信息</template>
       </el-menu-item>
       <el-menu-item index="/home">

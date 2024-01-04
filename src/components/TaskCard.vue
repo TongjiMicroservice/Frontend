@@ -202,7 +202,7 @@ onMounted(()=>{
         <div class="pr-3 font-bold">状态：</div>
         <el-tag type="warning" class="p-1" v-if="task.status===0&&new Date(task.deadline)<new Date()">已过期</el-tag>
         <el-tag type="danger" class="p-1" v-if="task.status===0&&new Date(task.deadline)>new Date()">未完成</el-tag>
-        <el-tag type="primary" class="p-1" v-if="task.status===1&&new Date(task.deadline)>new Date()">待审批</el-tag>
+        <el-tag type="primary" class="p-1" v-if="task.status===1">待审批</el-tag>
         <el-tag type="success" class="p-1" v-if="task.status===2">已完成</el-tag>
     </div>
   </div>

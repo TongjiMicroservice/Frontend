@@ -49,7 +49,7 @@ const register=(username:string,password:string,email:string)=>{
       username:username,
       password:password,
       email:email,
-      avatar:'default_avatar.png'
+      avatar:'https://img.duoziwang.com/2018/05/201712310823469.jpg'
     },
   }).then((res)=>{
     if(res.status===200&&res.data.code===200){

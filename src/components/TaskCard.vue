@@ -214,7 +214,7 @@ onMounted(()=>{
         <el-upload
             ref="upload"
             class="upload-demo"
-            :action="`http://luxingzhi.cn:8090/api/file?userId=${store.state.currentUser.id}&projectId=${store.state.currentProjectId}`"
+            :action="`http://localhost:8090/api/file?userId=${store.state.currentUser.id}&projectId=${store.state.currentProjectId}`"
             :limit="1"
             :on-exceed="handleExceed"
             :auto-upload="false"
